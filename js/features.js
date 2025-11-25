@@ -18,7 +18,6 @@ class FeatureManager {
         this.initSettings();
         this.initMTFPanel();
         this.initTipsPanel();
-        this.initPositionCalculator();
         this.initExportModal();
         this.initMarketData();
         this.applySettings();
@@ -36,7 +35,6 @@ class FeatureManager {
             volumeMultiplier: 2,
             mtfPanel: false,
             tipsPanel: false,
-            positionCalc: false,
             fearGreed: true,
             btcDom: true,
             confluenceBadge: false,
@@ -82,7 +80,6 @@ class FeatureManager {
             'setting-volume-filter': 'volumeFilter',
             'setting-mtf-panel': 'mtfPanel',
             'setting-tips-panel': 'tipsPanel',
-            'setting-position-calc': 'positionCalc',
             'setting-fear-greed': 'fearGreed',
             'setting-btc-dom': 'btcDom',
             'setting-confluence-badge': 'confluenceBadge',
@@ -127,21 +124,13 @@ class FeatureManager {
             mtfPanel.classList.add('collapsed');
         }
 
-        // Apply Tips Panel
+        // Apply Tips Panel (now on right side)
         const tipsPanel = document.getElementById('tips-panel');
         if (this.settings.tipsPanel) {
             tipsPanel.classList.remove('collapsed');
             this.updateTipsContent();
         } else {
             tipsPanel.classList.add('collapsed');
-        }
-
-        // Apply Position Calculator
-        const positionCalc = document.getElementById('position-calc');
-        if (this.settings.positionCalc) {
-            positionCalc.classList.remove('collapsed');
-        } else {
-            positionCalc.classList.add('collapsed');
         }
 
         // Apply Fear & Greed / BTC Dominance
@@ -345,21 +334,89 @@ class FeatureManager {
     }
 
     async fetchTimeframeData(exchange, symbol, timeframe) {
-        // This is a placeholder - integrate with actual exchange API
-        // For now, return null (will be connected to app's fetch logic)
-        return null;
+        try {
+            const exchangeConfig = {
+                'binance.us': {
+                    url: 'https://api.binance.us/api/v3/klines',
+                    format: 'binance'
+                },
+                'binance.com': {
+                    url: 'https://api.binance.com/api/v3/klines',
+                    format: 'binance'
+                },
+                'kraken': {
+                    url: 'https://api.kraken.com/0/public/OHLC',
+                    format: 'kraken'
+                }
+            };
+
+            const config = exchangeConfig[exchange];
+            if (!config) return null;
+
+            let data;
+            if (config.format === 'binance') {
+                const pair = `${symbol}USDT`;
+                const response = await fetch(`${config.url}?symbol=${pair}&interval=${timeframe}&limit=200`);
+                if (!response.ok) return null;
+                const rawData = await response.json();
+
+                data = rawData.map(candle => ({
+                    time: candle[0] / 1000,
+                    open: parseFloat(candle[1]),
+                    high: parseFloat(candle[2]),
+                    low: parseFloat(candle[3]),
+                    close: parseFloat(candle[4]),
+                    volume: parseFloat(candle[5])
+                }));
+            } else if (config.format === 'kraken') {
+                const pair = symbol === 'BTC' ? 'XBTUSD' : `${symbol}USD`;
+                const intervalMap = {
+                    '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+                    '1h': 60, '4h': 240, '1d': 1440, '1w': 10080, '1M': 21600
+                };
+
+                const response = await fetch(`${config.url}?pair=${pair}&interval=${intervalMap[timeframe]}`);
+                if (!response.ok) return null;
+                const rawData = await response.json();
+
+                if (rawData.error && rawData.error.length > 0) return null;
+                const ohlcData = rawData.result[Object.keys(rawData.result)[0]];
+
+                data = ohlcData.map(candle => ({
+                    time: candle[0],
+                    open: parseFloat(candle[1]),
+                    high: parseFloat(candle[2]),
+                    low: parseFloat(candle[3]),
+                    close: parseFloat(candle[4]),
+                    volume: parseFloat(candle[6])
+                }));
+            }
+
+            return data;
+        } catch (error) {
+            console.error(`Error fetching ${timeframe} data:`, error);
+            return null;
+        }
     }
 
     // ================== TIPS PANEL ==================
 
     initTipsPanel() {
-        const tipsToggle = document.getElementById('tips-toggle');
+        const tipsToggleBtn = document.getElementById('tips-toggle-btn');
+        const tipsClose = document.getElementById('tips-close');
         const tipsPanel = document.getElementById('tips-panel');
-        const tipsHeader = tipsPanel.querySelector('.tips-header');
 
-        tipsHeader.addEventListener('click', () => {
-            tipsPanel.classList.toggle('collapsed');
-            tipsToggle.textContent = tipsPanel.classList.contains('collapsed') ? '▲' : '▼';
+        tipsToggleBtn.addEventListener('click', () => {
+            tipsPanel.classList.remove('collapsed');
+            this.settings.tipsPanel = true;
+            this.saveSettings();
+            this.updateTipsContent();
+        });
+
+        tipsClose.addEventListener('click', () => {
+            tipsPanel.classList.add('collapsed');
+            this.settings.tipsPanel = false;
+            this.saveSettings();
         });
 
         // Tabs
@@ -558,113 +615,6 @@ class FeatureManager {
         return tips[regime] || tips['RANGING'];
     }
 
-    // ================== POSITION CALCULATOR ==================
-
-    initPositionCalculator() {
-        const calcToggle = document.getElementById('calc-toggle');
-        const calcClose = document.getElementById('calc-close');
-        const calcPanel = document.getElementById('position-calc');
-
-        calcToggle.addEventListener('click', () => {
-            calcPanel.classList.remove('collapsed');
-            this.settings.positionCalc = true;
-            this.saveSettings();
-            this.updateCalculator();
-        });
-
-        calcClose.addEventListener('click', () => {
-            calcPanel.classList.add('collapsed');
-            this.settings.positionCalc = false;
-            this.saveSettings();
-        });
-
-        // Input listeners
-        const inputs = ['calc-capital', 'calc-risk-pct', 'calc-entry', 'calc-stop'];
-        inputs.forEach(id => {
-            const input = document.getElementById(id);
-            if (input) {
-                input.addEventListener('input', () => this.updateCalculator());
-            }
-        });
-
-        // Buttons
-        document.getElementById('calc-copy')?.addEventListener('click', () => this.copyCalculatorValues());
-        document.getElementById('calc-reset')?.addEventListener('click', () => this.resetCalculator());
-    }
-
-    updateCalculator() {
-        const capital = parseFloat(document.getElementById('calc-capital').value) || 10000;
-        const riskPct = parseFloat(document.getElementById('calc-risk-pct').value) || 2;
-        const entry = parseFloat(document.getElementById('calc-entry').value) || 0;
-        const stop = parseFloat(document.getElementById('calc-stop').value) || 0;
-
-        const riskAmount = (capital * riskPct) / 100;
-        document.getElementById('calc-risk-amount').textContent = riskAmount.toFixed(2);
-
-        if (entry > 0 && stop > 0 && entry !== stop) {
-            const stopPct = ((stop - entry) / entry) * 100;
-            document.getElementById('calc-stop-pct').textContent = `${stopPct.toFixed(2)}%`;
-
-            const stopDistance = Math.abs(entry - stop);
-            const positionSize = riskAmount / stopDistance;
-
-            // Update suggestions
-            const conservative = positionSize * 0.67;
-            const standard = positionSize;
-            const aggressive = positionSize * 1.5;
-
-            const symbol = this.app.currentCrypto || 'BTC';
-            document.getElementById('calc-conservative').textContent =
-                `${conservative.toFixed(4)} ${symbol}`;
-            document.getElementById('calc-standard').textContent =
-                `${standard.toFixed(4)} ${symbol}`;
-            document.getElementById('calc-aggressive').textContent =
-                `${aggressive.toFixed(4)} ${symbol}`;
-        }
-
-        // Update regime info
-        const regime = this.app.currentRegime || 'RANGING';
-        document.getElementById('calc-regime').textContent = regime.replace('_', ' ');
-        document.getElementById('calc-atr').textContent = this.currentATR ?
-            this.currentATR.toFixed(2) : '--';
-
-        // Update regime tip
-        const regimeTips = {
-            'STRONG_UPTREND': 'Strong trend: Use wider stops (1.5-2x ATR), standard sizing OK',
-            'WEAK_UPTREND': 'Weak trend: Moderate stops (1-1.5x ATR), conservative sizing',
-            'RANGING': 'Choppy conditions: Tight stops (0.5-1x ATR), smaller positions or wait',
-            'WEAK_DOWNTREND': 'Weak downtrend: Be cautious, tight stops recommended',
-            'STRONG_DOWNTREND': 'Strong downtrend: Protect capital, wait for regime change'
-        };
-
-        document.getElementById('calc-regime-tip').textContent =
-            regimeTips[regime] || 'Adjust position size based on market conditions';
-    }
-
-    copyCalculatorValues() {
-        const values = {
-            capital: document.getElementById('calc-capital').value,
-            risk: document.getElementById('calc-risk-pct').value,
-            entry: document.getElementById('calc-entry').value,
-            stop: document.getElementById('calc-stop').value,
-            standard: document.getElementById('calc-standard').textContent
-        };
-
-        const text = `Capital: $${values.capital}\nRisk: ${values.risk}%\nEntry: $${values.entry}\nStop: $${values.stop}\nPosition: ${values.standard}`;
-
-        navigator.clipboard.writeText(text).then(() => {
-            alert('Calculator values copied to clipboard!');
-        });
-    }
-
-    resetCalculator() {
-        document.getElementById('calc-capital').value = 10000;
-        document.getElementById('calc-risk-pct').value = 2;
-        document.getElementById('calc-entry').value = 43250;
-        document.getElementById('calc-stop').value = 42500;
-        this.updateCalculator();
-    }
-
     // ================== MARKET DATA (F&G, BTC.D) ==================
 
     initMarketData() {
@@ -755,18 +705,53 @@ class FeatureManager {
     }
 
     async exportChart() {
-        alert('Export functionality requires html2canvas library. Add <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script> to enable this feature.');
+        if (typeof html2canvas === 'undefined') {
+            alert('html2canvas library not loaded. Please refresh the page.');
+            return;
+        }
 
-        // Future implementation with html2canvas:
-        /*
-        const chartSection = document.querySelector('.chart-section');
-        const canvas = await html2canvas(chartSection);
-        const link = document.createElement('a');
-        link.download = `brotrade-chart-${Date.now()}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        document.getElementById('export-modal').classList.add('hidden');
-        */
+        try {
+            // Get format selection
+            const format = document.querySelector('input[name="export-format"]:checked')?.value || 'png';
+            const resolution = document.querySelector('input[name="export-resolution"]:checked')?.value || 'screen';
+
+            // Get the chart section
+            const chartSection = document.querySelector('.chart-section');
+
+            // Set scale based on resolution
+            let scale = 1;
+            if (resolution === 'high') scale = 2;
+            if (resolution === 'social') scale = 1.5;
+
+            // Capture with html2canvas
+            const canvas = await html2canvas(chartSection, {
+                scale: scale,
+                backgroundColor: '#1a0f2e',
+                logging: false,
+                useCORS: true
+            });
+
+            // Convert to desired format
+            const imageType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+            const imageData = canvas.toDataURL(imageType, 0.95);
+
+            // Create download link
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().split('T')[0];
+            const symbol = this.app.currentCrypto || 'BTC';
+            const timeframe = this.app.currentTimeframe || '1h';
+            link.download = `brotrade-${symbol}-${timeframe}-${timestamp}.${format}`;
+            link.href = imageData;
+            link.click();
+
+            // Close modal
+            document.getElementById('export-modal').classList.add('hidden');
+
+            console.log('Chart exported successfully!');
+        } catch (error) {
+            console.error('Error exporting chart:', error);
+            alert('Error exporting chart. Please try again.');
+        }
     }
 }
 

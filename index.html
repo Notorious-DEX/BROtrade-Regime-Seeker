@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- HTML2Canvas for Chart Export -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
@@ -182,12 +184,6 @@
                                 <label>
                                     <input type="checkbox" id="setting-tips-panel">
                                     <span>Tips & Education Panel</span>
-                                </label>
-                            </div>
-                            <div class="setting-item">
-                                <label>
-                                    <input type="checkbox" id="setting-position-calc">
-                                    <span>Position Size Calculator</span>
                                 </label>
                             </div>
                             <div class="setting-item">
@@ -429,16 +425,20 @@
                 </div>
             </div>
         </div>
+        </div>
 
-            <!-- Tips & Education Panel (Bottom) -->
-            <div id="tips-panel" class="tips-panel collapsed">
-                <div class="tips-header">
-                    <span class="tips-title">
-                        💡 <span id="tips-regime-title">CURRENT REGIME</span>
-                    </span>
-                    <button class="tips-toggle" id="tips-toggle">▲</button>
+        <!-- Tips & Education Panel (Right Slide-out) -->
+        <div id="tips-panel" class="position-calc collapsed">
+            <button class="calc-toggle" id="tips-toggle-btn" title="Tips & Education">
+                <span class="calc-toggle-text">TIPS</span>
+                <span class="calc-toggle-arrow">►</span>
+            </button>
+            <div class="calc-content">
+                <div class="calc-header">
+                    <h3>💡 <span id="tips-regime-title">CURRENT REGIME</span></h3>
+                    <button class="calc-close" id="tips-close">◄</button>
                 </div>
-                <div class="tips-body">
+                <div class="calc-body">
                     <div class="tips-tabs">
                         <button class="tips-tab active" data-tab="current">Current Regime</button>
                         <button class="tips-tab" data-tab="mistakes">Mistakes</button>
@@ -446,86 +446,6 @@
                     </div>
                     <div class="tips-content" id="tips-content">
                         <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Position Size Calculator (Right Slide-out) -->
-        <div id="position-calc" class="position-calc collapsed">
-            <button class="calc-toggle" id="calc-toggle" title="Position Size Calculator">
-                <span class="calc-toggle-text">CALC</span>
-                <span class="calc-toggle-arrow">►</span>
-            </button>
-            <div class="calc-content">
-                <div class="calc-header">
-                    <h3>💰 POSITION CALC</h3>
-                    <button class="calc-close" id="calc-close">◄</button>
-                </div>
-                <div class="calc-body">
-                    <div class="calc-section">
-                        <h4>ACCOUNT</h4>
-                        <div class="calc-input-group">
-                            <label for="calc-capital">Capital:</label>
-                            <input type="number" id="calc-capital" value="10000" step="100">
-                        </div>
-                        <div class="calc-input-group">
-                            <label for="calc-risk-pct">Risk %:</label>
-                            <input type="number" id="calc-risk-pct" value="2" step="0.5" min="0.5" max="10">
-                        </div>
-                        <div class="calc-result">= $<span id="calc-risk-amount">200</span></div>
-                    </div>
-
-                    <div class="calc-section">
-                        <h4>ENTRY SETUP</h4>
-                        <div class="calc-input-group">
-                            <label for="calc-entry">Entry:</label>
-                            <input type="number" id="calc-entry" value="43250" step="1">
-                        </div>
-                        <div class="calc-input-group">
-                            <label for="calc-stop">Stop:</label>
-                            <input type="number" id="calc-stop" value="42500" step="1">
-                        </div>
-                        <div class="calc-result"><span id="calc-stop-pct">-1.73%</span></div>
-                        <button class="calc-btn-small" id="calc-set-from-chart">Set from Chart</button>
-                    </div>
-
-                    <div class="calc-section">
-                        <div class="calc-regime-info">
-                            <span>REGIME: <span id="calc-regime">--</span></span>
-                            <span>ATR: $<span id="calc-atr">--</span></span>
-                        </div>
-                    </div>
-
-                    <div class="calc-section calc-suggestions">
-                        <h4>💡 SUGGESTED</h4>
-                        <div class="calc-suggestion-item">
-                            <div class="calc-suggestion-label">Conservative</div>
-                            <div class="calc-suggestion-value" id="calc-conservative">0.267 BTC</div>
-                            <div class="calc-suggestion-rr">R:R 3:1</div>
-                        </div>
-                        <div class="calc-suggestion-item recommended">
-                            <div class="calc-suggestion-label">✅ Standard (Rec.)</div>
-                            <div class="calc-suggestion-value" id="calc-standard">0.462 BTC</div>
-                            <div class="calc-suggestion-rr">R:R 2:1</div>
-                        </div>
-                        <div class="calc-suggestion-item">
-                            <div class="calc-suggestion-label">Aggressive</div>
-                            <div class="calc-suggestion-value" id="calc-aggressive">0.694 BTC</div>
-                            <div class="calc-suggestion-rr">R:R 1:1</div>
-                        </div>
-                    </div>
-
-                    <div class="calc-section calc-tip">
-                        <h4>💡 TIP</h4>
-                        <div id="calc-regime-tip" class="calc-regime-tip-text">
-                            <!-- Will be populated based on regime -->
-                        </div>
-                    </div>
-
-                    <div class="calc-actions">
-                        <button class="calc-btn" id="calc-copy">Copy</button>
-                        <button class="calc-btn" id="calc-reset">Reset</button>
                     </div>
                 </div>
             </div>
