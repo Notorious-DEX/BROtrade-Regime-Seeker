@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BROtrade Regime Seeker v0.12</title>
+    <title>BROtrade Regime Seeker v0.13</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -15,7 +15,7 @@
         <header class="header">
             <h1 class="title">BROtrade Regime Seeker</h1>
             <div class="header-right">
-                <div class="version">v0.12</div>
+                <div class="version">v0.13</div>
                 <!-- Crypto Addresses Dropdown -->
                 <div class="crypto-addresses-container">
                     <button id="addresses-btn" class="addresses-btn" title="Support the project">
@@ -197,6 +197,39 @@
                     <input type="checkbox" id="colors-toggle" checked>
                     <span>Regime Colors</span>
                 </label>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="volume-filter-toggle">
+                    <span>Volume Surge Filter</span>
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="volume-multiplier">Volume Mult:</label>
+                <select id="volume-multiplier" class="select">
+                    <option value="1.5">1.5x</option>
+                    <option value="2" selected>2x</option>
+                    <option value="2.5">2.5x</option>
+                    <option value="3">3x</option>
+                </select>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="htf-alignment-toggle">
+                    <span>HTF Alignment</span>
+                </label>
+            </div>
+
+            <div class="control-group">
+                <label for="htf-multiplier">HTF Mult:</label>
+                <select id="htf-multiplier" class="select">
+                    <option value="4">4x</option>
+                    <option value="8">8x</option>
+                    <option value="12" selected>12x</option>
+                </select>
             </div>
 
             <div class="control-group">

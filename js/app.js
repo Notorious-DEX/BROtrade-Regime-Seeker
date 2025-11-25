@@ -78,6 +78,12 @@ class RegimeSeekerApp {
         this.soundEnabled = true;
         this.regimeColorsEnabled = true;
 
+        // Advanced Filters
+        this.volumeFilterEnabled = false;
+        this.volumeMultiplier = 2.0;
+        this.htfAlignmentEnabled = false;
+        this.htfMultiplier = 12;
+
         // State
         this.previousRegime = null;
         this.updateTimer = null;
@@ -85,6 +91,7 @@ class RegimeSeekerApp {
         this.candlestickSeries = null;
         this.emaSeries = null;
         this.data = [];
+        this.htfData = null; // Higher timeframe data
         this.isInitialLoad = true; // Track if this is the first data load
 
         // Indicator and sound
@@ -147,6 +154,40 @@ class RegimeSeekerApp {
             this.updateChart();
         });
 
+        // Volume filter toggle
+        document.getElementById('volume-filter-toggle').addEventListener('change', (e) => {
+            this.volumeFilterEnabled = e.target.checked;
+            this.updateIndicatorConfig();
+            this.isInitialLoad = true;
+            this.fetchData();
+        });
+
+        // Volume multiplier selector
+        document.getElementById('volume-multiplier').addEventListener('change', (e) => {
+            this.volumeMultiplier = parseFloat(e.target.value);
+            this.updateIndicatorConfig();
+            if (this.volumeFilterEnabled) {
+                this.isInitialLoad = true;
+                this.fetchData();
+            }
+        });
+
+        // HTF alignment toggle
+        document.getElementById('htf-alignment-toggle').addEventListener('change', (e) => {
+            this.htfAlignmentEnabled = e.target.checked;
+            this.isInitialLoad = true;
+            this.fetchData();
+        });
+
+        // HTF multiplier selector
+        document.getElementById('htf-multiplier').addEventListener('change', (e) => {
+            this.htfMultiplier = parseInt(e.target.value);
+            if (this.htfAlignmentEnabled) {
+                this.isInitialLoad = true;
+                this.fetchData();
+            }
+        });
+
         // Reset view button
         document.getElementById('reset-view').addEventListener('click', () => {
             this.resetView();
@@ -154,6 +195,16 @@ class RegimeSeekerApp {
 
         // Crypto addresses dropdown
         this.initAddressesDropdown();
+    }
+
+    /**
+     * Update indicator configuration with current settings
+     */
+    updateIndicatorConfig() {
+        this.indicator = new FilteredSignalsIndicator({
+            volumeFilterEnabled: this.volumeFilterEnabled,
+            volumeMultiplier: this.volumeMultiplier
+        });
     }
 
     /**
@@ -204,6 +255,42 @@ class RegimeSeekerApp {
     }
 
     /**
+     * Get higher timeframe based on current timeframe and multiplier
+     * @returns {string} - Higher timeframe string
+     */
+    getHigherTimeframe() {
+        // Convert timeframe to minutes
+        const tfToMinutes = {
+            '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+            '1h': 60, '4h': 240, '1d': 1440, '1w': 10080, '1M': 43200
+        };
+
+        const currentMinutes = tfToMinutes[this.currentTimeframe] || 60;
+        const htfMinutes = currentMinutes * this.htfMultiplier;
+
+        // Map back to timeframe string
+        const minutesToTf = {
+            1: '1m', 5: '5m', 15: '15m', 30: '30m',
+            60: '1h', 240: '4h', 1440: '1d', 10080: '1w', 43200: '1M'
+        };
+
+        // Find closest valid timeframe
+        if (minutesToTf[htfMinutes]) {
+            return minutesToTf[htfMinutes];
+        }
+
+        // If exact match not found, find closest higher timeframe
+        const validMinutes = [1, 5, 15, 30, 60, 240, 1440, 10080, 43200];
+        for (const minutes of validMinutes) {
+            if (minutes >= htfMinutes) {
+                return minutesToTf[minutes];
+            }
+        }
+
+        return '1d'; // Default fallback
+    }
+
+    /**
      * Fetch data from selected exchange
      */
     async fetchData() {
@@ -212,7 +299,39 @@ class RegimeSeekerApp {
 
             const exchange = EXCHANGES[this.currentExchange];
             let data;
+            let htfRegime = null;
 
+            // Fetch HTF data if alignment is enabled
+            if (this.htfAlignmentEnabled) {
+                const htfTimeframe = this.getHigherTimeframe();
+                const savedTimeframe = this.currentTimeframe;
+
+                // Temporarily set timeframe to HTF for fetching
+                this.currentTimeframe = htfTimeframe;
+
+                let htfData;
+                if (exchange.format === 'binance') {
+                    htfData = await this.fetchBinanceData(exchange.url);
+                } else if (exchange.format === 'kraken') {
+                    htfData = await this.fetchKrakenData(exchange.url);
+                }
+
+                // Restore original timeframe
+                this.currentTimeframe = savedTimeframe;
+
+                if (htfData && htfData.length > 0) {
+                    // Create separate indicator for HTF
+                    const htfIndicator = new FilteredSignalsIndicator();
+                    const htfSignals = htfIndicator.calculateSignals(htfData);
+
+                    if (htfSignals.length > 0) {
+                        htfRegime = htfSignals[htfSignals.length - 1].state;
+                        this.htfData = htfSignals;
+                    }
+                }
+            }
+
+            // Fetch current timeframe data
             if (exchange.format === 'binance') {
                 data = await this.fetchBinanceData(exchange.url);
             } else if (exchange.format === 'kraken') {
@@ -223,8 +342,18 @@ class RegimeSeekerApp {
                 throw new Error('No data received');
             }
 
+            // Update indicator config
+            this.updateIndicatorConfig();
+
             // Calculate indicators and regime states
-            this.data = this.indicator.calculateSignals(data);
+            let signals = this.indicator.calculateSignals(data);
+
+            // Apply HTF alignment filter if enabled
+            if (this.htfAlignmentEnabled && htfRegime !== null) {
+                signals = this.applyHTFAlignment(signals, htfRegime);
+            }
+
+            this.data = signals;
 
             // Check for regime change and play sound
             const currentRegime = this.indicator.currentState;
@@ -240,15 +369,58 @@ class RegimeSeekerApp {
 
             // Update status
             const lastUpdate = new Date().toLocaleTimeString();
-            this.updateStatus(
-                `Last update: ${lastUpdate} | State: ${currentRegime}`,
-                currentRegime
-            );
+            let statusMsg = `Last update: ${lastUpdate} | State: ${currentRegime}`;
+            if (this.htfAlignmentEnabled && htfRegime) {
+                statusMsg += ` | HTF: ${htfRegime}`;
+            }
+            this.updateStatus(statusMsg, currentRegime);
 
         } catch (error) {
             console.error('Fetch error:', error);
             this.updateStatus(`Error: ${error.message}`, 'error');
         }
+    }
+
+    /**
+     * Apply HTF alignment filter to signals
+     * @param {Array} signals - Current timeframe signals
+     * @param {string} htfRegime - Higher timeframe regime
+     * @returns {Array} - Filtered signals
+     */
+    applyHTFAlignment(signals, htfRegime) {
+        // Determine HTF trend direction
+        const htfIsUptrend = htfRegime === 'STRONG_UPTREND' || htfRegime === 'WEAK_UPTREND';
+        const htfIsDowntrend = htfRegime === 'STRONG_DOWNTREND' || htfRegime === 'WEAK_DOWNTREND';
+        const htfIsRanging = htfRegime === 'RANGING';
+
+        let previousState = 'RANGING';
+
+        return signals.map((signal, i) => {
+            let state = signal.state;
+            const currentIsUptrend = state === 'STRONG_UPTREND' || state === 'WEAK_UPTREND';
+            const currentIsDowntrend = state === 'STRONG_DOWNTREND' || state === 'WEAK_DOWNTREND';
+
+            // Apply alignment rules
+            if (!htfIsRanging) {
+                // Block counter-trend moves
+                if (htfIsUptrend && currentIsDowntrend) {
+                    // HTF is uptrend but current TF trying to go downtrend - block it
+                    state = previousState;
+                } else if (htfIsDowntrend && currentIsUptrend) {
+                    // HTF is downtrend but current TF trying to go uptrend - block it
+                    state = previousState;
+                }
+                // Allow ranging and same-direction trends
+            }
+            // If HTF is ranging, allow all current TF states
+
+            previousState = state;
+
+            return {
+                ...signal,
+                state: state
+            };
+        });
     }
 
     /**
@@ -594,7 +766,7 @@ class RegimeSeekerApp {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('BROtrade Regime Seeker v0.10');
+    console.log('BROtrade Regime Seeker v0.13');
     console.log('Initializing...');
 
     try {
