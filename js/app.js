@@ -151,6 +151,56 @@ class RegimeSeekerApp {
         document.getElementById('reset-view').addEventListener('click', () => {
             this.resetView();
         });
+
+        // Crypto addresses dropdown
+        this.initAddressesDropdown();
+    }
+
+    /**
+     * Initialize crypto addresses dropdown
+     */
+    initAddressesDropdown() {
+        const addressesBtn = document.getElementById('addresses-btn');
+        const addressesDropdown = document.getElementById('addresses-dropdown');
+        const copyButtons = document.querySelectorAll('.copy-btn');
+
+        // Toggle dropdown
+        addressesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addressesDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!addressesDropdown.contains(e.target) && e.target !== addressesBtn) {
+                addressesDropdown.classList.remove('show');
+            }
+        });
+
+        // Copy address to clipboard
+        copyButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const address = btn.getAttribute('data-address');
+
+                try {
+                    await navigator.clipboard.writeText(address);
+
+                    // Visual feedback
+                    btn.classList.add('copied');
+                    const originalTitle = btn.getAttribute('title');
+                    btn.setAttribute('title', 'Copied!');
+
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        btn.setAttribute('title', originalTitle);
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy address. Please copy manually.');
+                }
+            });
+        });
     }
 
     /**
