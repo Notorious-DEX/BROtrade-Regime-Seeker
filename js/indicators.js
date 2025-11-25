@@ -12,7 +12,36 @@ class FilteredSignalsIndicator {
         this.adxDeclinePct = config.adxDeclinePct || 15.0;
         this.diConvergence = config.diConvergence || 5.0;
 
+        // Volume Surge Filter
+        this.volumeFilterEnabled = config.volumeFilterEnabled || false;
+        this.volumeMultiplier = config.volumeMultiplier || 2.0;
+        this.volumeMALength = config.volumeMALength || 20;
+
         this.currentState = "RANGING";
+    }
+
+    /**
+     * Calculate SMA (Simple Moving Average)
+     * @param {Array} values - Array of values
+     * @param {number} period - SMA period
+     * @returns {Array} - SMA values
+     */
+    calculateSMA(values, period) {
+        const sma = [];
+
+        for (let i = 0; i < values.length; i++) {
+            if (i < period - 1) {
+                sma.push(null);
+            } else {
+                let sum = 0;
+                for (let j = 0; j < period; j++) {
+                    sum += values[i - j];
+                }
+                sma.push(sum / period);
+            }
+        }
+
+        return sma;
     }
 
     /**
@@ -173,22 +202,29 @@ class FilteredSignalsIndicator {
             return [];
         }
 
-        // Extract close prices
+        // Extract close prices and volumes
         const closePrices = candles.map(c => c.close);
+        const volumes = candles.map(c => c.volume);
 
         // Calculate EMA
         const ema = this.calculateEMA(closePrices, this.emaLength);
+
+        // Calculate volume SMA for surge filter
+        const volumeSMA = this.calculateSMA(volumes, this.volumeMALength);
 
         // Calculate ADX and directional indicators
         const { diPlus, diMinus, adx } = this.calculateADX(candles);
 
         // Add indicators to candles and determine regime
+        let previousState = "RANGING";
         const result = candles.map((candle, i) => {
             const close = candle.close;
             const emaVal = ema[i] !== null ? ema[i] : null;
             const adxVal = adx[i] || 0;
             const diPlusVal = diPlus[i] || 0;
             const diMinusVal = diMinus[i] || 0;
+            const volume = candle.volume;
+            const volumeAvg = volumeSMA[i];
 
             // Determine regime (exact Pine Script logic)
             const isStrongTrend = adxVal > this.adxThreshold;
@@ -210,12 +246,30 @@ class FilteredSignalsIndicator {
                 state = "RANGING";
             }
 
+            // Apply Volume Surge Filter
+            if (this.volumeFilterEnabled && volumeAvg !== null) {
+                // If regime is trying to change, check volume
+                if (state !== previousState) {
+                    const volumeThreshold = volumeAvg * this.volumeMultiplier;
+
+                    // If volume is insufficient, keep previous state
+                    if (volume < volumeThreshold) {
+                        state = previousState;
+                    }
+                }
+            }
+
+            // Update previous state for next iteration
+            previousState = state;
+
             return {
                 ...candle,
                 ema: emaVal,
                 diPlus: diPlusVal,
                 diMinus: diMinusVal,
                 adx: adxVal,
+                volume: volume,
+                volumeAvg: volumeAvg,
                 state: state
             };
         });
