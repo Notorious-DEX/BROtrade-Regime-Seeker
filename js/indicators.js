@@ -235,11 +235,11 @@ class FilteredSignalsIndicator {
      */
     static getRegimeColor(state) {
         const colors = {
-            'STRONG_UPTREND': '#10b981',
-            'WEAK_UPTREND': '#059669',
+            'STRONG_UPTREND': '#22c55e',
+            'WEAK_UPTREND': '#065f46',
             'RANGING': '#d4c5a9',
-            'WEAK_DOWNTREND': '#b91c1c',
-            'STRONG_DOWNTREND': '#ef4444'
+            'WEAK_DOWNTREND': '#7f1d1d',
+            'STRONG_DOWNTREND': '#f87171'
         };
         return colors[state] || colors['RANGING'];
     }
