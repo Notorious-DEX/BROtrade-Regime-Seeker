@@ -85,6 +85,7 @@ class RegimeSeekerApp {
         this.candlestickSeries = null;
         this.emaSeries = null;
         this.data = [];
+        this.isInitialLoad = true; // Track if this is the first data load
 
         // Indicator and sound
         this.indicator = new FilteredSignalsIndicator();
@@ -103,24 +104,28 @@ class RegimeSeekerApp {
         // Exchange selector
         document.getElementById('exchange').addEventListener('change', (e) => {
             this.currentExchange = e.target.value;
+            this.isInitialLoad = true; // Force fitContent when exchange changes
             this.fetchData();
         });
 
         // Crypto selector
         document.getElementById('crypto').addEventListener('change', (e) => {
             this.currentCrypto = e.target.value;
+            this.isInitialLoad = true; // Force fitContent when crypto changes
             this.fetchData();
         });
 
         // Timeframe selector
         document.getElementById('timeframe').addEventListener('change', (e) => {
             this.currentTimeframe = e.target.value;
+            this.isInitialLoad = true; // Force fitContent when timeframe changes
             this.fetchData();
         });
 
         // UTC offset selector
         document.getElementById('utc-offset').addEventListener('change', (e) => {
             this.utcOffset = parseInt(e.target.value);
+            this.isInitialLoad = true; // Force fitContent when UTC offset changes
             this.updateChart();
         });
 
@@ -311,19 +316,38 @@ class RegimeSeekerApp {
         });
 
         // Prepare EMA data with adjusted timestamps
-        const emaData = this.data
-            .filter(candle => candle.ema !== null)
-            .map(candle => ({
-                time: candle.time + offsetSeconds,
-                value: candle.ema
-            }));
+        // Extend the regime line back to the first candle using the first calculated EMA value
+        const emaData = [];
+        let firstEmaValue = null;
+
+        // Find the first non-null EMA value
+        for (const candle of this.data) {
+            if (candle.ema !== null) {
+                firstEmaValue = candle.ema;
+                break;
+            }
+        }
+
+        // Build EMA data, using firstEmaValue for initial null periods
+        if (firstEmaValue !== null) {
+            for (const candle of this.data) {
+                emaData.push({
+                    time: candle.time + offsetSeconds,
+                    value: candle.ema !== null ? candle.ema : firstEmaValue
+                });
+            }
+        }
 
         // Update series
         this.candlestickSeries.setData(candleData);
         this.emaSeries.setData(emaData);
 
-        // Force chart to recalculate time scale with new timestamps
-        this.chart.timeScale().fitContent();
+        // Only fit content on initial load or when user changes settings
+        // This preserves zoom/pan position during auto-updates
+        if (this.isInitialLoad) {
+            this.chart.timeScale().fitContent();
+            this.isInitialLoad = false;
+        }
 
         // Update background colors (regime zones)
         if (this.regimeColorsEnabled) {
