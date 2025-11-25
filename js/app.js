@@ -412,19 +412,6 @@ class RegimeSeekerApp {
             this.backgroundSeries = [];
         }
 
-        // Calculate price range for the background
-        let minPrice = Infinity;
-        let maxPrice = -Infinity;
-
-        for (const candle of this.data) {
-            if (candle.low < minPrice) minPrice = candle.low;
-            if (candle.high > maxPrice) maxPrice = candle.high;
-        }
-
-        // Add padding to span full chart height
-        const priceRange = maxPrice - minPrice;
-        const fullHeight = maxPrice + priceRange * 0.5; // High value for top of chart
-
         // Get regime color with transparency
         const getRegimeColorWithAlpha = (state) => {
             const baseColor = FilteredSignalsIndicator.getRegimeColor(state);
@@ -468,33 +455,44 @@ class RegimeSeekerApp {
             });
         }
 
-        // Create an area series for each regime zone
+        // Create an area series for each regime zone using a fixed 0-1 scale
         for (const zone of regimeZones) {
             const color = getRegimeColorWithAlpha(zone.state);
 
-            // Create area series with no line, just fill
+            // Create area series with fixed overlay scale (0 to 1)
             const areaSeries = this.chart.addAreaSeries({
                 lineColor: 'transparent',
                 topColor: color,
                 bottomColor: color,
                 lineWidth: 0,
-                priceScaleId: '', // Don't show on price scale
+                priceScaleId: 'background', // Separate scale for backgrounds
                 lastValueVisible: false,
                 priceLineVisible: false,
+                crosshairMarkerVisible: false,
             });
 
-            // Create data for this zone - spanning full height
+            // Create data for this zone - value of 1 spans full height
             const zoneData = [];
             for (let i = zone.startIdx; i <= zone.endIdx; i++) {
                 zoneData.push({
                     time: this.data[i].time,
-                    value: fullHeight
+                    value: 1 // Fixed value on 0-1 scale
                 });
             }
 
             areaSeries.setData(zoneData);
             this.backgroundSeries.push(areaSeries);
         }
+
+        // Configure the background price scale to be hidden and span 0-1
+        this.chart.priceScale('background').applyOptions({
+            visible: false,
+            scaleMargins: {
+                top: 0,
+                bottom: 0,
+            },
+            autoScale: false,
+        });
 
         // IMPORTANT: To ensure backgrounds are behind candlesticks,
         // we need to recreate the candlestick and EMA series
