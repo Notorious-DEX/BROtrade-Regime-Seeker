@@ -155,7 +155,6 @@ class RegimeSeekerApp {
         document.getElementById('volume-filter-toggle').addEventListener('change', (e) => {
             this.volumeFilterEnabled = e.target.checked;
             this.updateIndicatorConfig();
-            this.isInitialLoad = true;
             this.fetchData();
         });
 
@@ -164,7 +163,6 @@ class RegimeSeekerApp {
             this.volumeMultiplier = parseFloat(e.target.value);
             this.updateIndicatorConfig();
             if (this.volumeFilterEnabled) {
-                this.isInitialLoad = true;
                 this.fetchData();
             }
         });
@@ -401,24 +399,13 @@ class RegimeSeekerApp {
         });
 
         // Prepare EMA data with adjusted timestamps
-        // Extend the regime line back to the first candle using the first calculated EMA value
+        // Only include candles where EMA has been calculated (not null)
         const emaData = [];
-        let firstEmaValue = null;
-
-        // Find the first non-null EMA value
         for (const candle of this.data) {
             if (candle.ema !== null) {
-                firstEmaValue = candle.ema;
-                break;
-            }
-        }
-
-        // Build EMA data, using firstEmaValue for initial null periods
-        if (firstEmaValue !== null) {
-            for (const candle of this.data) {
                 emaData.push({
                     time: candle.time + offsetSeconds,
-                    value: candle.ema !== null ? candle.ema : firstEmaValue
+                    value: candle.ema
                 });
             }
         }
@@ -431,22 +418,6 @@ class RegimeSeekerApp {
         // This preserves zoom/pan position during auto-updates
         if (this.isInitialLoad) {
             this.chart.timeScale().fitContent();
-
-            // Add padding on the right side by adjusting visible range
-            const timeScale = this.chart.timeScale();
-            const logicalRange = timeScale.getVisibleLogicalRange();
-
-            if (logicalRange) {
-                // Add 10% padding to the right
-                const rangeSize = logicalRange.to - logicalRange.from;
-                const padding = rangeSize * 0.10;
-
-                timeScale.setVisibleLogicalRange({
-                    from: logicalRange.from - padding,
-                    to: logicalRange.to
-                });
-            }
-
             this.isInitialLoad = false;
         }
 
@@ -487,6 +458,7 @@ class RegimeSeekerApp {
                 borderColor: THEME.border,
                 timeVisible: true,
                 secondsVisible: false,
+                rightOffset: 12,
             },
             crosshair: {
                 mode: LightweightCharts.CrosshairMode.Normal,
@@ -645,7 +617,7 @@ class RegimeSeekerApp {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('BROtrade Regime Seeker v0.14');
+    console.log('BROtrade Regime Seeker v0.15');
     console.log('Initializing...');
 
     try {
