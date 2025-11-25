@@ -84,6 +84,7 @@ class RegimeSeekerApp {
         this.chart = null;
         this.candlestickSeries = null;
         this.emaSeries = null;
+        this.backgroundSeries = null; // For regime background colors
         this.data = [];
 
         // Indicator and sound
@@ -322,6 +323,9 @@ class RegimeSeekerApp {
         // Update background colors (regime zones)
         if (this.regimeColorsEnabled) {
             this.updateRegimeBackgrounds();
+        } else if (this.backgroundSeries) {
+            // Clear backgrounds when toggle is off
+            this.backgroundSeries.setData([]);
         }
 
         // Update chart title
@@ -353,6 +357,18 @@ class RegimeSeekerApp {
             },
             crosshair: {
                 mode: LightweightCharts.CrosshairMode.Normal,
+            },
+        });
+
+        // Create background histogram series (rendered first, so it's behind everything)
+        this.backgroundSeries = this.chart.addHistogramSeries({
+            priceFormat: {
+                type: 'price',
+            },
+            priceScaleId: '', // Empty string means it won't show on price scale
+            scaleMargins: {
+                top: 0,
+                bottom: 0,
             },
         });
 
@@ -389,46 +405,52 @@ class RegimeSeekerApp {
      * Update regime background colors
      */
     updateRegimeBackgrounds() {
-        if (!this.data || this.data.length === 0) {
+        if (!this.data || this.data.length === 0 || !this.backgroundSeries) {
             return;
         }
 
-        // Group consecutive candles by regime
-        const regimeZones = [];
-        let currentState = null;
-        let startTime = null;
+        // Calculate price range for the background
+        let minPrice = Infinity;
+        let maxPrice = -Infinity;
 
-        for (let i = 0; i < this.data.length; i++) {
-            const candle = this.data[i];
-
-            if (candle.state !== currentState) {
-                // Save previous zone
-                if (currentState !== null) {
-                    regimeZones.push({
-                        state: currentState,
-                        startTime: startTime,
-                        endTime: candle.time
-                    });
-                }
-
-                // Start new zone
-                currentState = candle.state;
-                startTime = candle.time;
-            }
+        for (const candle of this.data) {
+            if (candle.low < minPrice) minPrice = candle.low;
+            if (candle.high > maxPrice) maxPrice = candle.high;
         }
 
-        // Add final zone
-        if (currentState !== null) {
-            regimeZones.push({
-                state: currentState,
-                startTime: startTime,
-                endTime: this.data[this.data.length - 1].time + 3600 // Extend to right
-            });
-        }
+        // Add padding to the range
+        const priceRange = maxPrice - minPrice;
+        const paddedMax = maxPrice + priceRange * 0.1;
+        const paddedMin = minPrice - priceRange * 0.1;
+        const midPoint = (paddedMax + paddedMin) / 2;
 
-        // Apply background colors using time scale marks (workaround)
-        // Note: Lightweight Charts doesn't support background zones natively,
-        // so we use the candlestick colors to indicate regimes
+        // Get regime color with transparency
+        const getRegimeColorWithAlpha = (state) => {
+            const baseColor = FilteredSignalsIndicator.getRegimeColor(state);
+            // Convert hex to rgba with 20% opacity
+            const r = parseInt(baseColor.slice(1, 3), 16);
+            const g = parseInt(baseColor.slice(3, 5), 16);
+            const b = parseInt(baseColor.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, 0.2)`;
+        };
+
+        // Create histogram data - one bar per candle with regime color
+        const histogramData = this.data.map(candle => {
+            return {
+                time: candle.time,
+                value: midPoint, // Center the histogram
+                color: getRegimeColorWithAlpha(candle.state)
+            };
+        });
+
+        // Update the background series
+        this.backgroundSeries.setData(histogramData);
+
+        // Make the histogram span the full height by setting the visible range
+        // This is a workaround - we set the series to cover a large range
+        this.backgroundSeries.applyOptions({
+            base: paddedMin,
+        });
     }
 
     /**
