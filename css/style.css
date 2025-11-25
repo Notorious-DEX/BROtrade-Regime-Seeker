@@ -4,10 +4,10 @@
 :root {
     --theme-bg: #0f0a1e;
     --theme-secondary-bg: #1a0f2e;
-    --theme-bull: #10b981;
-    --theme-bull-dark: #059669;
-    --theme-bear: #ef4444;
-    --theme-bear-dark: #b91c1c;
+    --theme-bull: #22c55e;
+    --theme-bull-dark: #065f46;
+    --theme-bear: #f87171;
+    --theme-bear-dark: #7f1d1d;
     --theme-caution: #d4c5a9;
     --theme-ema: #8b5cf6;
     --theme-purple-light: #e0d4f7;
@@ -72,6 +72,7 @@ body {
     flex-wrap: wrap;
     gap: 15px;
     align-items: center;
+    justify-content: center;
     padding: 15px 20px;
     background-color: var(--theme-secondary-bg);
     border-radius: 8px;
@@ -241,6 +242,17 @@ body {
     border-radius: 8px;
     border: 1px solid var(--theme-border);
     font-size: 13px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.copyright {
+    color: var(--theme-purple-mid);
+    font-size: 12px;
+    width: 100%;
+    text-align: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--theme-border);
 }
 
 .controls-help {
