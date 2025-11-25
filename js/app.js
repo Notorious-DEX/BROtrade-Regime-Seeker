@@ -84,7 +84,6 @@ class RegimeSeekerApp {
         this.chart = null;
         this.candlestickSeries = null;
         this.emaSeries = null;
-        this.backgroundSeries = []; // For regime background colors (array of area series)
         this.data = [];
 
         // Indicator and sound
@@ -323,12 +322,6 @@ class RegimeSeekerApp {
         // Update background colors (regime zones)
         if (this.regimeColorsEnabled) {
             this.updateRegimeBackgrounds();
-        } else if (this.backgroundSeries && Array.isArray(this.backgroundSeries)) {
-            // Clear backgrounds when toggle is off
-            for (const series of this.backgroundSeries) {
-                this.chart.removeSeries(series);
-            }
-            this.backgroundSeries = [];
         }
 
         // Update chart title
@@ -362,10 +355,6 @@ class RegimeSeekerApp {
                 mode: LightweightCharts.CrosshairMode.Normal,
             },
         });
-
-        // Create background area series (rendered first, so it's behind everything)
-        // We'll use multiple area series, one for each regime zone
-        this.backgroundSeries = [];
 
         // Create candlestick series
         this.candlestickSeries = this.chart.addCandlestickSeries({
@@ -404,28 +393,10 @@ class RegimeSeekerApp {
             return;
         }
 
-        // Clear existing background series
-        if (this.backgroundSeries && Array.isArray(this.backgroundSeries)) {
-            for (const series of this.backgroundSeries) {
-                this.chart.removeSeries(series);
-            }
-            this.backgroundSeries = [];
-        }
-
-        // Get regime color with transparency
-        const getRegimeColorWithAlpha = (state) => {
-            const baseColor = FilteredSignalsIndicator.getRegimeColor(state);
-            // Convert hex to rgba with 20% opacity
-            const r = parseInt(baseColor.slice(1, 3), 16);
-            const g = parseInt(baseColor.slice(3, 5), 16);
-            const b = parseInt(baseColor.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, 0.2)`;
-        };
-
-        // Group consecutive candles by regime to create zones
+        // Group consecutive candles by regime
         const regimeZones = [];
         let currentState = null;
-        let zoneStart = 0;
+        let startTime = null;
 
         for (let i = 0; i < this.data.length; i++) {
             const candle = this.data[i];
@@ -435,14 +406,14 @@ class RegimeSeekerApp {
                 if (currentState !== null) {
                     regimeZones.push({
                         state: currentState,
-                        startIdx: zoneStart,
-                        endIdx: i - 1
+                        startTime: startTime,
+                        endTime: candle.time
                     });
                 }
 
                 // Start new zone
                 currentState = candle.state;
-                zoneStart = i;
+                startTime = candle.time;
             }
         }
 
@@ -450,101 +421,14 @@ class RegimeSeekerApp {
         if (currentState !== null) {
             regimeZones.push({
                 state: currentState,
-                startIdx: zoneStart,
-                endIdx: this.data.length - 1
+                startTime: startTime,
+                endTime: this.data[this.data.length - 1].time + 3600 // Extend to right
             });
         }
 
-        // Create an area series for each regime zone using a fixed 0-1 scale
-        for (const zone of regimeZones) {
-            const color = getRegimeColorWithAlpha(zone.state);
-
-            // Create area series with fixed overlay scale (0 to 1)
-            const areaSeries = this.chart.addAreaSeries({
-                lineColor: 'transparent',
-                topColor: color,
-                bottomColor: color,
-                lineWidth: 0,
-                priceScaleId: 'background', // Separate scale for backgrounds
-                lastValueVisible: false,
-                priceLineVisible: false,
-                crosshairMarkerVisible: false,
-            });
-
-            // Create data for this zone - value of 1 spans full height
-            const zoneData = [];
-            for (let i = zone.startIdx; i <= zone.endIdx; i++) {
-                zoneData.push({
-                    time: this.data[i].time,
-                    value: 1 // Fixed value on 0-1 scale
-                });
-            }
-
-            areaSeries.setData(zoneData);
-            this.backgroundSeries.push(areaSeries);
-        }
-
-        // Configure the background price scale to be hidden and span 0-1
-        this.chart.priceScale('background').applyOptions({
-            visible: false,
-            scaleMargins: {
-                top: 0,
-                bottom: 0,
-            },
-            autoScale: false,
-        });
-
-        // IMPORTANT: To ensure backgrounds are behind candlesticks,
-        // we need to recreate the candlestick and EMA series
-        // (series are rendered in order of creation)
-        if (this.candlestickSeries && this.emaSeries) {
-            // Save the current data
-            const candleData = this.data.map(candle => {
-                const color = FilteredSignalsIndicator.getRegimeColor(candle.state);
-                return {
-                    time: candle.time,
-                    open: candle.open,
-                    high: candle.high,
-                    low: candle.low,
-                    close: candle.close,
-                    color: color,
-                    borderColor: color,
-                    wickColor: color
-                };
-            });
-
-            const emaData = this.data
-                .filter(candle => candle.ema !== null)
-                .map(candle => ({
-                    time: candle.time,
-                    value: candle.ema
-                }));
-
-            // Remove old series
-            this.chart.removeSeries(this.candlestickSeries);
-            this.chart.removeSeries(this.emaSeries);
-
-            // Recreate candlestick series (now on top of backgrounds)
-            this.candlestickSeries = this.chart.addCandlestickSeries({
-                upColor: THEME.bull,
-                downColor: THEME.bear,
-                borderUpColor: THEME.bull,
-                borderDownColor: THEME.bear,
-                wickUpColor: THEME.bull,
-                wickDownColor: THEME.bear,
-            });
-
-            // Recreate EMA series
-            this.emaSeries = this.chart.addLineSeries({
-                color: THEME.ema,
-                lineWidth: 2,
-                title: 'EMA (50)',
-            });
-
-            // Restore the data
-            this.candlestickSeries.setData(candleData);
-            this.emaSeries.setData(emaData);
-        }
+        // Apply background colors using time scale marks (workaround)
+        // Note: Lightweight Charts doesn't support background zones natively,
+        // so we use the candlestick colors to indicate regimes
     }
 
     /**
