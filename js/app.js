@@ -289,14 +289,17 @@ class RegimeSeekerApp {
             this.createChart();
         }
 
-        // Prepare candlestick data with regime colors
+        // Calculate UTC offset in seconds
+        const offsetSeconds = this.utcOffset * 3600;
+
+        // Prepare candlestick data with regime colors and adjusted timestamps
         const candleData = this.data.map(candle => {
             const color = this.regimeColorsEnabled
                 ? FilteredSignalsIndicator.getRegimeColor(candle.state)
                 : (candle.close >= candle.open ? THEME.bull : THEME.bear);
 
             return {
-                time: candle.time,
+                time: candle.time + offsetSeconds,
                 open: candle.open,
                 high: candle.high,
                 low: candle.low,
@@ -307,37 +310,17 @@ class RegimeSeekerApp {
             };
         });
 
-        // Prepare EMA data
+        // Prepare EMA data with adjusted timestamps
         const emaData = this.data
             .filter(candle => candle.ema !== null)
             .map(candle => ({
-                time: candle.time,
+                time: candle.time + offsetSeconds,
                 value: candle.ema
             }));
 
         // Update series
         this.candlestickSeries.setData(candleData);
         this.emaSeries.setData(emaData);
-
-        // Update time formatter with current UTC offset
-        this.chart.applyOptions({
-            localization: {
-                timeFormatter: (timestamp) => {
-                    // Apply UTC offset for display
-                    const offsetMs = this.utcOffset * 3600 * 1000;
-                    const date = new Date((timestamp * 1000) + offsetMs);
-
-                    // Format as date and time in UTC to prevent double timezone conversion
-                    const year = date.getUTCFullYear();
-                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                    const day = String(date.getUTCDate()).padStart(2, '0');
-                    const hours = String(date.getUTCHours()).padStart(2, '0');
-                    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-
-                    return `${year}-${month}-${day} ${hours}:${minutes}`;
-                },
-            },
-        });
 
         // Update background colors (regime zones)
         if (this.regimeColorsEnabled) {
@@ -379,22 +362,6 @@ class RegimeSeekerApp {
             },
             crosshair: {
                 mode: LightweightCharts.CrosshairMode.Normal,
-            },
-            localization: {
-                timeFormatter: (timestamp) => {
-                    // Apply UTC offset for display
-                    const offsetMs = this.utcOffset * 3600 * 1000;
-                    const date = new Date((timestamp * 1000) + offsetMs);
-
-                    // Format as date and time in UTC to prevent double timezone conversion
-                    const year = date.getUTCFullYear();
-                    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                    const day = String(date.getUTCDate()).padStart(2, '0');
-                    const hours = String(date.getUTCHours()).padStart(2, '0');
-                    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-
-                    return `${year}-${month}-${day} ${hours}:${minutes}`;
-                },
             },
         });
 
