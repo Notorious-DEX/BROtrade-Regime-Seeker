@@ -289,6 +289,9 @@ class RegimeSeekerApp {
             this.createChart();
         }
 
+        // Calculate UTC offset adjustment in seconds
+        const offsetSeconds = this.utcOffset * 3600;
+
         // Prepare candlestick data with regime colors
         const candleData = this.data.map(candle => {
             const color = this.regimeColorsEnabled
@@ -296,7 +299,7 @@ class RegimeSeekerApp {
                 : (candle.close >= candle.open ? THEME.bull : THEME.bear);
 
             return {
-                time: candle.time,
+                time: candle.time + offsetSeconds,
                 open: candle.open,
                 high: candle.high,
                 low: candle.low,
@@ -311,7 +314,7 @@ class RegimeSeekerApp {
         const emaData = this.data
             .filter(candle => candle.ema !== null)
             .map(candle => ({
-                time: candle.time,
+                time: candle.time + offsetSeconds,
                 value: candle.ema
             }));
 
@@ -345,6 +348,12 @@ class RegimeSeekerApp {
             },
             rightPriceScale: {
                 borderColor: THEME.border,
+                mode: 0, // Normal mode
+                autoScale: true,
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1,
+                },
             },
             timeScale: {
                 borderColor: THEME.border,
@@ -370,7 +379,7 @@ class RegimeSeekerApp {
         this.emaSeries = this.chart.addLineSeries({
             color: THEME.ema,
             lineWidth: 2,
-            title: 'EMA (50)',
+            title: 'Regime Trend',
         });
 
         // Auto-resize chart
@@ -383,6 +392,20 @@ class RegimeSeekerApp {
         });
 
         resizeObserver.observe(chartContainer);
+
+        // Add double-click zoom on price scale (TradingView-style)
+        chartContainer.addEventListener('dblclick', (event) => {
+            const rect = chartContainer.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const width = rect.width;
+
+            // Check if click is on the right side (price scale area)
+            // Price scale is typically ~60px wide on the right
+            if (x > width - 60) {
+                // Auto-fit the price scale
+                this.chart.timeScale().fitContent();
+            }
+        });
     }
 
     /**
