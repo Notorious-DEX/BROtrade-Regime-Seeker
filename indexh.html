@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BROtrade Regime Seeker v0.10</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Lightweight Charts Library -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">BROtrade Regime Seeker</h1>
+            <div class="version">v0.10</div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="exchange">Exchange:</label>
+                <select id="exchange" class="select">
+                    <option value="binance.us">Binance.US</option>
+                    <option value="binance.com">Binance.com</option>
+                    <option value="kraken">Kraken</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="crypto">Crypto:</label>
+                <select id="crypto" class="select">
+                    <option value="BTC">BTC (Bitcoin)</option>
+                    <option value="ETH">ETH (Ethereum)</option>
+                    <option value="BNB">BNB (Binance Coin)</option>
+                    <option value="SOL">SOL (Solana)</option>
+                    <option value="XRP">XRP (Ripple)</option>
+                    <option value="ADA">ADA (Cardano)</option>
+                    <option value="DOGE">DOGE (Dogecoin)</option>
+                    <option value="AVAX">AVAX (Avalanche)</option>
+                    <option value="MATIC">MATIC (Polygon)</option>
+                    <option value="DOT">DOT (Polkadot)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="timeframe">Timeframe:</label>
+                <select id="timeframe" class="select">
+                    <option value="1m">1 min</option>
+                    <option value="5m">5 min</option>
+                    <option value="15m">15 min</option>
+                    <option value="30m">30 min</option>
+                    <option value="1h" selected>1 hour</option>
+                    <option value="4h">4 hour</option>
+                    <option value="1d">1 day</option>
+                    <option value="1w">1 week</option>
+                    <option value="1M">1 month</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="utc-offset">UTC Offset:</label>
+                <select id="utc-offset" class="select">
+                    <option value="-12">UTC-12</option>
+                    <option value="-11">UTC-11</option>
+                    <option value="-10">UTC-10</option>
+                    <option value="-9">UTC-9</option>
+                    <option value="-8">UTC-8</option>
+                    <option value="-7">UTC-7</option>
+                    <option value="-6" selected>UTC-6</option>
+                    <option value="-5">UTC-5</option>
+                    <option value="-4">UTC-4</option>
+                    <option value="-3">UTC-3</option>
+                    <option value="-2">UTC-2</option>
+                    <option value="-1">UTC-1</option>
+                    <option value="0">UTC+0</option>
+                    <option value="1">UTC+1</option>
+                    <option value="2">UTC+2</option>
+                    <option value="3">UTC+3</option>
+                    <option value="4">UTC+4</option>
+                    <option value="5">UTC+5</option>
+                    <option value="6">UTC+6</option>
+                    <option value="7">UTC+7</option>
+                    <option value="8">UTC+8</option>
+                    <option value="9">UTC+9</option>
+                    <option value="10">UTC+10</option>
+                    <option value="11">UTC+11</option>
+                    <option value="12">UTC+12</option>
+                    <option value="13">UTC+13</option>
+                    <option value="14">UTC+14</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="update-interval">Update:</label>
+                <select id="update-interval" class="select">
+                    <option value="5">5s</option>
+                    <option value="15" selected>15s</option>
+                    <option value="30">30s</option>
+                    <option value="60">60s</option>
+                </select>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="sound-toggle" checked>
+                    <span>Sound</span>
+                </label>
+            </div>
+
+            <div class="control-group checkbox-group">
+                <label>
+                    <input type="checkbox" id="colors-toggle" checked>
+                    <span>Regime Colors</span>
+                </label>
+            </div>
+
+            <div class="control-group">
+                <button id="reset-view" class="btn">Reset View</button>
+            </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <div class="chart-title" id="chart-title">Loading...</div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #8b5cf6;"></span>
+                        <span>Trend EMA (50)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #10b981;"></span>
+                        <span>Strong Up</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #059669;"></span>
+                        <span>Weak Up</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #d4c5a9;"></span>
+                        <span>Ranging</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #b91c1c;"></span>
+                        <span>Weak Down</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background-color: #ef4444;"></span>
+                        <span>Strong Down</span>
+                    </div>
+                </div>
+            </div>
+            <div id="chart" class="chart"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="controls-help">
+                Controls: Mouse wheel to zoom | Left-click & drag to pan | Double-click to reset
+            </div>
+            <div class="status" id="status">Initializing...</div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/indicators.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
