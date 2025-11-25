@@ -617,7 +617,7 @@ class RegimeSeekerApp {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('BROtrade Regime Seeker v0.15');
+    console.log('BROtrade Regime Seeker v0.16');
     console.log('Initializing...');
 
     try {
