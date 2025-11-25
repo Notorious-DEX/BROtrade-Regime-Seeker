@@ -322,6 +322,9 @@ class RegimeSeekerApp {
         this.candlestickSeries.setData(candleData);
         this.emaSeries.setData(emaData);
 
+        // Force chart to recalculate time scale with new timestamps
+        this.chart.timeScale().fitContent();
+
         // Update background colors (regime zones)
         if (this.regimeColorsEnabled) {
             this.updateRegimeBackgrounds();
