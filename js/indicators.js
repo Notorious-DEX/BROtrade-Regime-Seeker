@@ -185,15 +185,15 @@ class FilteredSignalsIndicator {
         // Add indicators to candles and determine regime
         const result = candles.map((candle, i) => {
             const close = candle.close;
-            const emaVal = ema[i] || 0;
+            const emaVal = ema[i] !== null ? ema[i] : null;
             const adxVal = adx[i] || 0;
             const diPlusVal = diPlus[i] || 0;
             const diMinusVal = diMinus[i] || 0;
 
             // Determine regime (exact Pine Script logic)
             const isStrongTrend = adxVal > this.adxThreshold;
-            const isPriceAboveEma = close > emaVal;
-            const isPriceBelowEma = close < emaVal;
+            const isPriceAboveEma = emaVal !== null && close > emaVal;
+            const isPriceBelowEma = emaVal !== null && close < emaVal;
             const isUptrend = diPlusVal > diMinusVal && isPriceAboveEma;
             const isDowntrend = diMinusVal > diPlusVal && isPriceBelowEma;
 
