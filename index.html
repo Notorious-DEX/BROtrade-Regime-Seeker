@@ -14,8 +14,24 @@
         <!-- Header -->
         <header class="header">
             <h1 class="title">BROtrade Regime Seeker</h1>
+            <div class="header-center">
+                <div class="market-info" id="market-info">
+                    <span class="market-info-item" id="fear-greed-display" title="Crypto Fear & Greed Index">
+                        F&G: <span id="fear-greed-value">--</span>
+                    </span>
+                    <span class="market-info-item" id="btc-dom-display" title="Bitcoin Dominance">
+                        BTC.D: <span id="btc-dom-value">--</span>
+                    </span>
+                </div>
+            </div>
             <div class="header-right">
                 <div class="version">v0.16</div>
+                <button id="settings-btn" class="settings-btn" title="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6m6-12-6 6m0 0-6 6m12 0-6-6m0 0-6-6"></path>
+                    </svg>
+                </button>
                 <!-- Crypto Addresses Dropdown -->
                 <div class="crypto-addresses-container">
                     <button id="addresses-btn" class="addresses-btn" title="Support the project">
@@ -99,6 +115,127 @@
                 </div>
             </div>
         </header>
+
+        <!-- Settings Dropdown Panel -->
+        <div id="settings-panel" class="settings-panel">
+            <div class="settings-content">
+                <div class="settings-header">
+                    <h3>Settings & Features</h3>
+                    <button id="settings-close" class="settings-close-btn">&times;</button>
+                </div>
+                <div class="settings-body">
+                    <div class="settings-columns">
+                        <!-- Column 1: Chart Display -->
+                        <div class="settings-column">
+                            <h4>Chart Display</h4>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-regime-colors" checked>
+                                    <span>Regime Colors</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-show-ema" checked>
+                                    <span>Show EMA (50)</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-atr-bands">
+                                    <span>ATR Bands Overlay</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-sound" checked>
+                                    <span>Sound Alerts</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-volume-filter">
+                                    <span>Volume Filter</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label for="setting-volume-mult">Volume Multiplier:</label>
+                                <select id="setting-volume-mult" class="setting-select">
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2" selected>2x</option>
+                                    <option value="2.5">2.5x</option>
+                                    <option value="3">3x</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Panels & Tools -->
+                        <div class="settings-column">
+                            <h4>Panels & Tools</h4>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-mtf-panel">
+                                    <span>Multi-Timeframe Panel</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-tips-panel">
+                                    <span>Tips & Education Panel</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-position-calc">
+                                    <span>Position Size Calculator</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-fear-greed" checked>
+                                    <span>Fear & Greed Index</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-btc-dom" checked>
+                                    <span>Bitcoin Dominance</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Indicators -->
+                        <div class="settings-column">
+                            <h4>Indicators</h4>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-confluence-badge">
+                                    <span>Confluence Badge</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-storm-warning">
+                                    <span>"Storm Warning" Detector</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-event-markers">
+                                    <span>Economic Event Markers</span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="setting-tooltips" checked>
+                                    <span>Educational Tooltips</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Controls -->
         <div class="controls">
@@ -221,8 +358,37 @@
             </div>
         </div>
 
-        <!-- Chart Container -->
-        <div class="chart-section">
+        <!-- Main Content Area with Panels -->
+        <div class="main-content">
+            <!-- Multi-Timeframe Panel (Left) -->
+            <div id="mtf-panel" class="mtf-panel collapsed">
+                <button class="mtf-toggle" id="mtf-toggle" title="Multi-Timeframe Analysis">
+                    <span class="mtf-toggle-text">MTF</span>
+                    <span class="mtf-toggle-arrow">◄</span>
+                </button>
+                <div class="mtf-content">
+                    <div class="mtf-header">
+                        <h3>MULTI-TIMEFRAME</h3>
+                        <button class="mtf-close" id="mtf-close">►</button>
+                    </div>
+                    <div class="mtf-body">
+                        <div id="mtf-timeframes" class="mtf-timeframes">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        <div class="mtf-confluence">
+                            <h4>🎯 CONFLUENCE</h4>
+                            <div class="confluence-bar">
+                                <div id="confluence-fill" class="confluence-fill"></div>
+                            </div>
+                            <div id="confluence-text" class="confluence-text">--</div>
+                            <div id="confluence-tip" class="confluence-tip"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="chart-section">
             <div class="chart-header">
                 <div class="chart-title" id="chart-title">Loading...</div>
                 <div class="legend">
@@ -252,7 +418,117 @@
                     </div>
                 </div>
             </div>
-            <div id="chart" class="chart"></div>
+            <div id="chart" class="chart">
+                <!-- Confluence Badge (Floating) -->
+                <div id="confluence-badge" class="confluence-badge hidden">
+                    <div class="confluence-badge-content">
+                        <span class="confluence-icon">⚡</span>
+                        <span id="confluence-badge-text">HIGH CONFLUENCE</span>
+                        <span id="confluence-badge-count">5/7 BULLISH ↑</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Tips & Education Panel (Bottom) -->
+            <div id="tips-panel" class="tips-panel collapsed">
+                <div class="tips-header">
+                    <span class="tips-title">
+                        💡 <span id="tips-regime-title">CURRENT REGIME</span>
+                    </span>
+                    <button class="tips-toggle" id="tips-toggle">▲</button>
+                </div>
+                <div class="tips-body">
+                    <div class="tips-tabs">
+                        <button class="tips-tab active" data-tab="current">Current Regime</button>
+                        <button class="tips-tab" data-tab="mistakes">Mistakes</button>
+                        <button class="tips-tab" data-tab="learn">Learn</button>
+                    </div>
+                    <div class="tips-content" id="tips-content">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position Size Calculator (Right Slide-out) -->
+        <div id="position-calc" class="position-calc collapsed">
+            <button class="calc-toggle" id="calc-toggle" title="Position Size Calculator">
+                <span class="calc-toggle-text">CALC</span>
+                <span class="calc-toggle-arrow">►</span>
+            </button>
+            <div class="calc-content">
+                <div class="calc-header">
+                    <h3>💰 POSITION CALC</h3>
+                    <button class="calc-close" id="calc-close">◄</button>
+                </div>
+                <div class="calc-body">
+                    <div class="calc-section">
+                        <h4>ACCOUNT</h4>
+                        <div class="calc-input-group">
+                            <label for="calc-capital">Capital:</label>
+                            <input type="number" id="calc-capital" value="10000" step="100">
+                        </div>
+                        <div class="calc-input-group">
+                            <label for="calc-risk-pct">Risk %:</label>
+                            <input type="number" id="calc-risk-pct" value="2" step="0.5" min="0.5" max="10">
+                        </div>
+                        <div class="calc-result">= $<span id="calc-risk-amount">200</span></div>
+                    </div>
+
+                    <div class="calc-section">
+                        <h4>ENTRY SETUP</h4>
+                        <div class="calc-input-group">
+                            <label for="calc-entry">Entry:</label>
+                            <input type="number" id="calc-entry" value="43250" step="1">
+                        </div>
+                        <div class="calc-input-group">
+                            <label for="calc-stop">Stop:</label>
+                            <input type="number" id="calc-stop" value="42500" step="1">
+                        </div>
+                        <div class="calc-result"><span id="calc-stop-pct">-1.73%</span></div>
+                        <button class="calc-btn-small" id="calc-set-from-chart">Set from Chart</button>
+                    </div>
+
+                    <div class="calc-section">
+                        <div class="calc-regime-info">
+                            <span>REGIME: <span id="calc-regime">--</span></span>
+                            <span>ATR: $<span id="calc-atr">--</span></span>
+                        </div>
+                    </div>
+
+                    <div class="calc-section calc-suggestions">
+                        <h4>💡 SUGGESTED</h4>
+                        <div class="calc-suggestion-item">
+                            <div class="calc-suggestion-label">Conservative</div>
+                            <div class="calc-suggestion-value" id="calc-conservative">0.267 BTC</div>
+                            <div class="calc-suggestion-rr">R:R 3:1</div>
+                        </div>
+                        <div class="calc-suggestion-item recommended">
+                            <div class="calc-suggestion-label">✅ Standard (Rec.)</div>
+                            <div class="calc-suggestion-value" id="calc-standard">0.462 BTC</div>
+                            <div class="calc-suggestion-rr">R:R 2:1</div>
+                        </div>
+                        <div class="calc-suggestion-item">
+                            <div class="calc-suggestion-label">Aggressive</div>
+                            <div class="calc-suggestion-value" id="calc-aggressive">0.694 BTC</div>
+                            <div class="calc-suggestion-rr">R:R 1:1</div>
+                        </div>
+                    </div>
+
+                    <div class="calc-section calc-tip">
+                        <h4>💡 TIP</h4>
+                        <div id="calc-regime-tip" class="calc-regime-tip-text">
+                            <!-- Will be populated based on regime -->
+                        </div>
+                    </div>
+
+                    <div class="calc-actions">
+                        <button class="calc-btn" id="calc-copy">Copy</button>
+                        <button class="calc-btn" id="calc-reset">Reset</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -261,15 +537,76 @@
                 Controls: Mouse wheel to zoom | Left-click & drag to pan | Double-click to reset
             </div>
             <div class="status" id="status">Initializing...</div>
+            <button id="export-chart-btn" class="export-btn" title="Export Chart">
+                📷 Export
+            </button>
             <div class="copyright">
                 &copy; 2025 BROtrades&trade; All rights reserved.
             </div>
         </footer>
+
+        <!-- Export Modal -->
+        <div id="export-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📷 EXPORT CHART</h3>
+                    <button class="modal-close" id="export-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-option-group">
+                        <h4>Format</h4>
+                        <label class="export-radio">
+                            <input type="radio" name="export-format" value="png" checked>
+                            <span>PNG (Recommended)</span>
+                        </label>
+                        <label class="export-radio">
+                            <input type="radio" name="export-format" value="jpg">
+                            <span>JPG (Smaller file)</span>
+                        </label>
+                    </div>
+                    <div class="export-option-group">
+                        <h4>Resolution</h4>
+                        <label class="export-radio">
+                            <input type="radio" name="export-resolution" value="screen" checked>
+                            <span>Screen Size (1920x1080)</span>
+                        </label>
+                        <label class="export-radio">
+                            <input type="radio" name="export-resolution" value="high">
+                            <span>High Res (3840x2160)</span>
+                        </label>
+                        <label class="export-radio">
+                            <input type="radio" name="export-resolution" value="social">
+                            <span>Social Media (1200x630)</span>
+                        </label>
+                    </div>
+                    <div class="export-option-group">
+                        <h4>Include</h4>
+                        <label class="export-checkbox">
+                            <input type="checkbox" id="export-branding" checked>
+                            <span>BROtrade branding/logo</span>
+                        </label>
+                        <label class="export-checkbox">
+                            <input type="checkbox" id="export-datetime" checked>
+                            <span>Current date/time</span>
+                        </label>
+                        <label class="export-checkbox">
+                            <input type="checkbox" id="export-info" checked>
+                            <span>Symbol & timeframe info</span>
+                        </label>
+                    </div>
+                    <div class="export-actions">
+                        <button class="export-action-btn" id="export-download">💾 Download</button>
+                        <button class="export-action-btn secondary" id="export-cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
     <script src="js/indicators.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/features.js"></script>
 </body>
 </html>
 
