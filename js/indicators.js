@@ -209,6 +209,18 @@ class FilteredSignalsIndicator {
         // Calculate EMA
         const ema = this.calculateEMA(closePrices, this.emaLength);
 
+        // Backfill EMA nulls with first valid value for regime calculation
+        let firstValidEMA = null;
+        for (let i = 0; i < ema.length; i++) {
+            if (ema[i] !== null) {
+                firstValidEMA = ema[i];
+                break;
+            }
+        }
+
+        // Create backfilled EMA array for regime detection
+        const emaBackfilled = ema.map(val => val !== null ? val : firstValidEMA);
+
         // Calculate volume SMA for surge filter
         const volumeSMA = this.calculateSMA(volumes, this.volumeMALength);
 
@@ -219,17 +231,18 @@ class FilteredSignalsIndicator {
         let previousState = "RANGING";
         const result = candles.map((candle, i) => {
             const close = candle.close;
-            const emaVal = ema[i] !== null ? ema[i] : null;
+            const emaVal = ema[i] !== null ? ema[i] : null; // Original EMA for display
+            const emaForCalc = emaBackfilled[i]; // Backfilled EMA for regime calculation
             const adxVal = adx[i] || 0;
             const diPlusVal = diPlus[i] || 0;
             const diMinusVal = diMinus[i] || 0;
             const volume = candle.volume;
             const volumeAvg = volumeSMA[i];
 
-            // Determine regime (exact Pine Script logic)
+            // Determine regime using backfilled EMA
             const isStrongTrend = adxVal > this.adxThreshold;
-            const isPriceAboveEma = emaVal !== null && close > emaVal;
-            const isPriceBelowEma = emaVal !== null && close < emaVal;
+            const isPriceAboveEma = emaForCalc !== null && close > emaForCalc;
+            const isPriceBelowEma = emaForCalc !== null && close < emaForCalc;
             const isUptrend = diPlusVal > diMinusVal && isPriceAboveEma;
             const isDowntrend = diMinusVal > diPlusVal && isPriceBelowEma;
 
