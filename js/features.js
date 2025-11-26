@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.19 - Market data always visible, timeframe mismatch fixed, event markers removed
+ * v0.20 - Added Fear & Greed visual gauge with semi-circular meter
  */
 
 // Feature Manager Class
@@ -20,6 +20,7 @@ class FeatureManager {
         this.initMTFPanel();
         this.initTipsPanel();
         this.initExportModal();
+        this.initFearGreedModal();
         this.initMarketData();
         this.applySettings();
         this.startIndicatorUpdates();
@@ -893,6 +894,12 @@ class FeatureManager {
                 }
 
                 display.title = `Fear & Greed Index: ${value} (${classification})`;
+
+                // Update gauge if modal is open
+                const modal = document.getElementById('fear-greed-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    this.updateGauge();
+                }
             }
         } catch (error) {
             console.error('Error fetching Fear & Greed Index:', error);
@@ -949,6 +956,57 @@ class FeatureManager {
         });
     }
 
+    initFearGreedModal() {
+        const fearGreedDisplay = document.getElementById('fear-greed-display');
+        const fearGreedModal = document.getElementById('fear-greed-modal');
+        const fearGreedClose = document.getElementById('fear-greed-modal-close');
+
+        fearGreedDisplay.addEventListener('click', () => {
+            fearGreedModal.classList.remove('hidden');
+            // Update gauge when modal opens
+            this.updateGauge();
+        });
+
+        fearGreedClose.addEventListener('click', () => {
+            fearGreedModal.classList.add('hidden');
+        });
+
+        // Close on backdrop click
+        fearGreedModal.addEventListener('click', (e) => {
+            if (e.target === fearGreedModal) {
+                fearGreedModal.classList.add('hidden');
+            }
+        });
+    }
+
+    updateGauge() {
+        const fearGreedValue = document.getElementById('fear-greed-value').textContent;
+
+        // If value is not loaded yet, try to fetch
+        if (fearGreedValue === '--') {
+            this.fetchFearGreedIndex();
+            return;
+        }
+
+        const value = parseInt(fearGreedValue);
+        if (isNaN(value)) return;
+
+        // Get classification from the header display title
+        const display = document.getElementById('fear-greed-display');
+        const titleText = display.title || '';
+        const classificationMatch = titleText.match(/\(([^)]+)\)/);
+        const classification = classificationMatch ? classificationMatch[1] : 'Unknown';
+
+        // Update gauge value text
+        document.getElementById('gauge-value-text').textContent = value;
+        document.getElementById('gauge-classification-text').textContent = classification;
+
+        // Rotate needle based on value (0-100 maps to -90 to 90 degrees)
+        const angle = (value / 100) * 180 - 90;
+        const needle = document.getElementById('gauge-needle');
+        needle.style.transform = `rotate(${angle}deg)`;
+    }
+
     async exportChart() {
         if (typeof html2canvas === 'undefined') {
             alert('html2canvas library not loaded. Please refresh the page.');
@@ -985,7 +1043,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.19</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.20</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';
