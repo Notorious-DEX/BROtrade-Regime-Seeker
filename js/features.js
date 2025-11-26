@@ -21,6 +21,19 @@ class FeatureManager {
         this.initExportModal();
         this.initMarketData();
         this.applySettings();
+        this.startIndicatorUpdates();
+    }
+
+    startIndicatorUpdates() {
+        // Update indicators every 5 seconds
+        setInterval(() => {
+            if (this.settings.stormWarning) {
+                this.updateStormWarning();
+            }
+            if (this.settings.confluenceBadge) {
+                this.updateConfluenceBadge();
+            }
+        }, 5000);
     }
 
     // ================== SETTINGS MANAGEMENT ==================
@@ -242,11 +255,13 @@ class FeatureManager {
     }
 
     updateStormWarning() {
-        if (!this.app || !this.app.indicator) return;
+        if (!this.app || !this.app.data || this.app.data.length === 0) return;
 
-        const adx = this.app.indicator.adx;
-        const diPlus = this.app.indicator.diPlus;
-        const diMinus = this.app.indicator.diMinus;
+        // Get the latest candle data
+        const latestCandle = this.app.data[this.app.data.length - 1];
+        const adx = latestCandle.adx || 0;
+        const diPlus = latestCandle.diPlus || 0;
+        const diMinus = latestCandle.diMinus || 0;
 
         // Storm Warning: Very high ADX (>50) with diverging DI lines
         const isStorm = adx > 50 && Math.abs(diPlus - diMinus) > 30;
@@ -515,23 +530,7 @@ class FeatureManager {
 
         // Update badge
         if (this.settings.confluenceBadge) {
-            this.updateConfluenceBadge(confluencePercent, confluenceType, confluenceText);
-        }
-    }
-
-    updateConfluenceBadge(percent, type, text) {
-        const badge = document.getElementById('confluence-badge');
-        const badgeContent = badge.querySelector('.confluence-badge-content');
-        const badgeText = document.getElementById('confluence-badge-text');
-        const badgeCount = document.getElementById('confluence-badge-count');
-
-        if (percent >= 60) {
-            badge.classList.remove('hidden');
-            badgeContent.className = `confluence-badge-content ${type}`;
-            badgeText.textContent = 'HIGH CONFLUENCE';
-            badgeCount.textContent = text.toUpperCase();
-        } else {
-            badge.classList.add('hidden');
+            this.updateConfluenceBadge();
         }
     }
 
@@ -1055,12 +1054,20 @@ function calculateRegimeForData(candles) {
         // Create a temporary indicator instance
         const tempIndicator = new FilteredSignalsIndicator();
 
-        // Process the data
-        tempIndicator.processData(candles);
+        // Process the data using calculateSignals
+        const processedData = tempIndicator.calculateSignals(candles);
+
+        if (processedData && processedData.length > 0) {
+            const lastCandle = processedData[processedData.length - 1];
+            return {
+                currentState: lastCandle.state || 'RANGING',
+                adx: lastCandle.adx || 0
+            };
+        }
 
         return {
             currentState: tempIndicator.currentState || 'RANGING',
-            adx: tempIndicator.adx || 0
+            adx: 0
         };
     } catch (error) {
         console.error('Error calculating regime:', error);
