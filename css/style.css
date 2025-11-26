@@ -26,16 +26,20 @@ body {
     background-color: var(--theme-bg);
     color: var(--theme-purple-light);
     line-height: 1.6;
-    overflow-x: hidden;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
 }
 
 .container {
     max-width: 1800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
 /* Header */
@@ -43,12 +47,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
-    padding: 15px 20px;
+    margin-bottom: 10px;
+    padding: 10px 15px;
     background-color: var(--theme-secondary-bg);
     border-radius: 8px;
     border: 1px solid var(--theme-border);
     gap: 20px;
+    flex-shrink: 0;
 }
 
 .header-center {
@@ -248,14 +253,15 @@ body {
 .controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px;
     align-items: center;
     justify-content: center;
-    padding: 15px 20px;
+    padding: 8px 15px;
     background-color: var(--theme-secondary-bg);
     border-radius: 8px;
     border: 1px solid var(--theme-border);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
 .control-group {
@@ -340,16 +346,17 @@ body {
     background-color: var(--theme-secondary-bg);
     border-radius: 8px;
     border: 1px solid var(--theme-border);
-    padding: 20px;
-    margin-bottom: 15px;
-    min-height: 600px;
+    padding: 15px;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .chart-header {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
 .chart-title {
@@ -407,7 +414,8 @@ body {
 .chart {
     flex: 1;
     position: relative;
-    min-height: 500px;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Footer */
@@ -415,13 +423,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
+    padding: 8px 15px;
     background-color: var(--theme-secondary-bg);
     border-radius: 8px;
     border: 1px solid var(--theme-border);
-    font-size: 13px;
+    font-size: 12px;
     flex-wrap: wrap;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .copyright {
@@ -578,7 +587,9 @@ body {
     position: relative;
     flex: 1;
     gap: 0;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Multi-Timeframe Panel (Left Sidebar) */
@@ -984,8 +995,9 @@ body {
     right: 0;
     top: 120px;
     bottom: 80px;
-    z-index: 500;
+    z-index: 100;
     transition: all 0.3s ease;
+    pointer-events: none;
 }
 
 .position-calc.collapsed {
@@ -994,6 +1006,7 @@ body {
 
 .position-calc:not(.collapsed) {
     width: 380px;
+    pointer-events: auto;
 }
 
 .calc-toggle {
@@ -1015,6 +1028,7 @@ body {
     gap: 5px;
     transition: all 0.3s ease;
     z-index: 10;
+    pointer-events: auto;
 }
 
 .calc-toggle:hover {
