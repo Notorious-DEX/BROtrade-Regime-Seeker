@@ -1099,11 +1099,17 @@ class FeatureManager {
                         return null;
                     }
 
+                    // Validate that we have price data
+                    if (!data[id].usd || typeof data[id].usd !== 'number') {
+                        console.warn(`Invalid price data for ${symbol}:`, data[id].usd);
+                        return null;
+                    }
+
                     return {
                         symbol: symbol,
                         name: CRYPTO_NAMES[symbol],
                         price: data[id].usd,
-                        change24h: data[id].usd_24h_change || 0
+                        change24h: typeof data[id].usd_24h_change === 'number' ? data[id].usd_24h_change : 0
                     };
                 })
                 .filter(item => item !== null)
@@ -1142,6 +1148,12 @@ class FeatureManager {
         heatmapGrid.innerHTML = '';
 
         data.forEach(token => {
+            // Extra safety check
+            if (!token || typeof token.price !== 'number' || typeof token.change24h !== 'number') {
+                console.error('Invalid token data:', token);
+                return;
+            }
+
             const tile = document.createElement('div');
             tile.className = 'heatmap-tile ' + this.getHeatmapColorClass(token.change24h);
 
