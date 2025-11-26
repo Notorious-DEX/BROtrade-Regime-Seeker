@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.19 - Fixed market data toggles, timeframe mismatch, removed event markers
+ * v0.19 - Market data always visible, timeframe mismatch fixed, event markers removed
  */
 
 // Feature Manager Class
@@ -46,9 +46,6 @@ class FeatureManager {
             sound: true,
             volumeFilter: false,
             volumeMultiplier: 2,
-            fearGreed: true,
-            btcDom: true,
-            showADX: true,
             confluenceBadge: false,
             stormWarning: false
         };
@@ -88,9 +85,6 @@ class FeatureManager {
             'setting-atr-bands': 'atrBands',
             'setting-sound': 'sound',
             'setting-volume-filter': 'volumeFilter',
-            'setting-fear-greed': 'fearGreed',
-            'setting-btc-dom': 'btcDom',
-            'setting-show-adx': 'showADX',
             'setting-confluence-badge': 'confluenceBadge',
             'setting-storm-warning': 'stormWarning'
         };
@@ -167,33 +161,7 @@ class FeatureManager {
             }
         }
 
-        // ===== MARKET DATA SETTINGS =====
-
-        // Apply Fear & Greed / BTC Dominance / ADX
-        const marketInfo = document.getElementById('market-info');
-        const fearGreedDisplay = document.getElementById('fear-greed-display');
-        const btcDomDisplay = document.getElementById('btc-dom-display');
-        const adxDisplay = document.getElementById('adx-display');
-
-        // Show/hide individual items based on settings
-        if (fearGreedDisplay) {
-            console.log('Fear & Greed toggle:', this.settings.fearGreed);
-            fearGreedDisplay.style.display = this.settings.fearGreed ? 'inline' : 'none';
-        }
-        if (btcDomDisplay) {
-            console.log('BTC.D toggle:', this.settings.btcDom);
-            btcDomDisplay.style.display = this.settings.btcDom ? 'inline' : 'none';
-        }
-        if (adxDisplay) {
-            console.log('ADX toggle:', this.settings.showADX);
-            adxDisplay.style.display = this.settings.showADX ? 'inline' : 'none';
-        }
-
-        // Show container if any item is enabled
-        if (marketInfo) {
-            const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
-            marketInfo.style.display = anyEnabled ? 'flex' : 'none';
-        }
+        // ===== INDICATORS SETTINGS =====
 
         // Apply Confluence Badge
         const confluenceBadge = document.getElementById('confluence-badge');
