@@ -175,26 +175,26 @@ class FeatureManager {
         const btcDomDisplay = document.getElementById('btc-dom-display');
         const adxDisplay = document.getElementById('adx-display');
 
-        // Show/hide individual items based on settings using classList
+        // Show/hide individual items based on settings using inline styles with !important
         if (fearGreedDisplay) {
             if (this.settings.fearGreed) {
-                fearGreedDisplay.classList.remove('hidden');
+                fearGreedDisplay.style.removeProperty('display');
             } else {
-                fearGreedDisplay.classList.add('hidden');
+                fearGreedDisplay.style.setProperty('display', 'none', 'important');
             }
         }
         if (btcDomDisplay) {
             if (this.settings.btcDom) {
-                btcDomDisplay.classList.remove('hidden');
+                btcDomDisplay.style.removeProperty('display');
             } else {
-                btcDomDisplay.classList.add('hidden');
+                btcDomDisplay.style.setProperty('display', 'none', 'important');
             }
         }
         if (adxDisplay) {
             if (this.settings.showADX) {
-                adxDisplay.classList.remove('hidden');
+                adxDisplay.style.removeProperty('display');
             } else {
-                adxDisplay.classList.add('hidden');
+                adxDisplay.style.setProperty('display', 'none', 'important');
             }
         }
 
@@ -202,18 +202,21 @@ class FeatureManager {
         if (marketInfo) {
             const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
             if (anyEnabled) {
-                marketInfo.classList.remove('hidden');
+                marketInfo.style.removeProperty('display');
             } else {
-                marketInfo.classList.add('hidden');
+                marketInfo.style.setProperty('display', 'none', 'important');
             }
         }
 
         // Apply Confluence Badge
+        const confluenceBadge = document.getElementById('confluence-badge');
         if (this.settings.confluenceBadge) {
             this.updateConfluenceBadge();
         } else {
-            const badge = document.getElementById('confluence-badge');
-            if (badge) badge.classList.add('hidden');
+            // Immediately hide badge when setting is disabled
+            if (confluenceBadge) {
+                confluenceBadge.style.setProperty('display', 'none', 'important');
+            }
         }
 
         // Apply Storm Warning
@@ -231,7 +234,9 @@ class FeatureManager {
         // Don't show badge if setting is disabled
         if (!this.settings.confluenceBadge) {
             const badge = document.getElementById('confluence-badge');
-            if (badge) badge.classList.add('hidden');
+            if (badge) {
+                badge.style.setProperty('display', 'none', 'important');
+            }
             return;
         }
 
@@ -252,7 +257,7 @@ class FeatureManager {
         if (!badge || !badgeContent || !badgeText || !badgeCount) return;
 
         if (uptrends >= Math.ceil(total * 0.6)) {
-            badge.classList.remove('hidden');
+            badge.style.removeProperty('display');
             // Special text for 100% confluence
             if (uptrends === total) {
                 badgeText.textContent = 'UPTREND CONFIRMED';
@@ -264,7 +269,7 @@ class FeatureManager {
             badgeContent.classList.add('bullish');
             badgeContent.classList.remove('bearish');
         } else if (downtrends >= Math.ceil(total * 0.6)) {
-            badge.classList.remove('hidden');
+            badge.style.removeProperty('display');
             // Special text for 100% confluence
             if (downtrends === total) {
                 badgeText.textContent = 'DOWNTREND CONFIRMED';
@@ -276,7 +281,7 @@ class FeatureManager {
             badgeContent.classList.add('bearish');
             badgeContent.classList.remove('bullish');
         } else {
-            badge.classList.add('hidden');
+            badge.style.setProperty('display', 'none', 'important');
         }
     }
 
