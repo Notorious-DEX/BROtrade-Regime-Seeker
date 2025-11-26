@@ -420,15 +420,14 @@ body {
 
 /* Footer */
 .footer {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     padding: 8px 15px;
     background-color: var(--theme-secondary-bg);
     border-radius: 8px;
     border: 1px solid var(--theme-border);
     font-size: 12px;
-    flex-wrap: wrap;
     gap: 10px;
     flex-shrink: 0;
 }
@@ -440,17 +439,23 @@ body {
     text-align: center;
     padding-top: 8px;
     border-top: 1px solid var(--theme-border);
+    grid-column: 1 / -1;
 }
 
 .controls-help {
     color: var(--theme-purple-mid);
+    justify-self: start;
 }
 
 .status {
     color: var(--theme-caution);
     font-weight: 500;
-    flex: 1;
     text-align: center;
+    justify-self: center;
+}
+
+.export-btn {
+    justify-self: end;
 }
 
 .status.STRONG_UPTREND {
