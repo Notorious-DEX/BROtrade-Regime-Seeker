@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.18 - MTF confluence fix, centered market info
+ * v0.19 - Fixed market data toggles, timeframe mismatch, removed event markers
  */
 
 // Feature Manager Class
@@ -50,8 +50,7 @@ class FeatureManager {
             btcDom: true,
             showADX: true,
             confluenceBadge: false,
-            stormWarning: false,
-            eventMarkers: false
+            stormWarning: false
         };
 
         const saved = localStorage.getItem('brotrade_settings');
@@ -93,8 +92,7 @@ class FeatureManager {
             'setting-btc-dom': 'btcDom',
             'setting-show-adx': 'showADX',
             'setting-confluence-badge': 'confluenceBadge',
-            'setting-storm-warning': 'stormWarning',
-            'setting-event-markers': 'eventMarkers'
+            'setting-storm-warning': 'stormWarning'
         };
 
         Object.entries(settingInputs).forEach(([id, key]) => {
@@ -177,21 +175,37 @@ class FeatureManager {
         const btcDomDisplay = document.getElementById('btc-dom-display');
         const adxDisplay = document.getElementById('adx-display');
 
-        // Show/hide individual items based on settings
+        // Show/hide individual items based on settings using classList
         if (fearGreedDisplay) {
-            fearGreedDisplay.style.display = this.settings.fearGreed ? '' : 'none';
+            if (this.settings.fearGreed) {
+                fearGreedDisplay.classList.remove('hidden');
+            } else {
+                fearGreedDisplay.classList.add('hidden');
+            }
         }
         if (btcDomDisplay) {
-            btcDomDisplay.style.display = this.settings.btcDom ? '' : 'none';
+            if (this.settings.btcDom) {
+                btcDomDisplay.classList.remove('hidden');
+            } else {
+                btcDomDisplay.classList.add('hidden');
+            }
         }
         if (adxDisplay) {
-            adxDisplay.style.display = this.settings.showADX ? '' : 'none';
+            if (this.settings.showADX) {
+                adxDisplay.classList.remove('hidden');
+            } else {
+                adxDisplay.classList.add('hidden');
+            }
         }
 
         // Show container if any item is enabled
         if (marketInfo) {
             const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
-            marketInfo.style.display = anyEnabled ? '' : 'none';
+            if (anyEnabled) {
+                marketInfo.classList.remove('hidden');
+            } else {
+                marketInfo.classList.add('hidden');
+            }
         }
 
         // Apply Confluence Badge
@@ -207,13 +221,6 @@ class FeatureManager {
             this.updateStormWarning();
         } else {
             this.removeStormWarning();
-        }
-
-        // Apply Economic Events
-        if (this.settings.eventMarkers) {
-            this.updateEconomicEvents();
-        } else {
-            this.removeEconomicEvents();
         }
 
         // Sync with legacy controls
@@ -316,34 +323,6 @@ class FeatureManager {
         const warning = document.getElementById('storm-warning');
         if (warning) {
             warning.classList.add('hidden');
-        }
-    }
-
-    updateEconomicEvents() {
-        // Show placeholder message for economic events
-        let eventNotice = document.getElementById('economic-events-notice');
-        if (!eventNotice) {
-            eventNotice = document.createElement('div');
-            eventNotice.id = 'economic-events-notice';
-            eventNotice.className = 'economic-events-notice';
-            eventNotice.innerHTML = `
-                <div class="economic-notice-content">
-                    <span class="notice-icon">📅</span>
-                    <span class="notice-text">Economic Events: API integration coming soon</span>
-                </div>
-            `;
-            const chartSection = document.querySelector('.chart-section');
-            if (chartSection) {
-                chartSection.appendChild(eventNotice);
-            }
-        }
-        eventNotice.classList.remove('hidden');
-    }
-
-    removeEconomicEvents() {
-        const eventNotice = document.getElementById('economic-events-notice');
-        if (eventNotice) {
-            eventNotice.classList.add('hidden');
         }
     }
 
@@ -1036,7 +1015,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.18</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.19</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';
