@@ -1053,7 +1053,7 @@ class FeatureManager {
                 'ETC': 'ethereum-classic', 'INJ': 'injective-protocol', 'RUNE': 'thorchain',
                 'SAND': 'the-sandbox', 'MANA': 'decentraland', 'AXS': 'axie-infinity',
                 'GALA': 'gala', 'FTM': 'fantom', 'AAVE': 'aave', 'GRT': 'the-graph',
-                'IMX': 'immutable-x', 'MKR': 'maker', 'SNX': 'havven', 'LDO': 'lido-dao',
+                'IMX': 'immutable-x', 'MKR': 'maker', 'SNX': 'synthetix-network-token', 'LDO': 'lido-dao',
                 'EGLD': 'elrond-erd-2', 'EOS': 'eos', 'XTZ': 'tezos', 'THETA': 'theta-token',
                 'CRV': 'curve-dao-token', 'ZEC': 'zcash', 'DASH': 'dash', 'KAVA': 'kava'
             };
@@ -1061,20 +1061,43 @@ class FeatureManager {
             // Build comma-separated list of CoinGecko IDs
             const ids = symbols.map(s => coinGeckoIds[s]).filter(id => id).join(',');
 
-            // Fetch from CoinGecko
+            console.log('Fetching heatmap data for:', ids.split(',').length, 'tokens');
+
+            // Fetch from CoinGecko with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
             const response = await fetch(
-                `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
+                `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+                { signal: controller.signal }
             );
 
-            if (!response.ok) throw new Error('Failed to fetch market data');
+            clearTimeout(timeoutId);
+
+            console.log('API Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error:', response.status, errorText);
+                throw new Error(`API returned ${response.status}: ${errorText.substring(0, 100)}`);
+            }
 
             const data = await response.json();
+            console.log('Received data for tokens:', Object.keys(data).length);
+
+            // Check if we got any data
+            if (Object.keys(data).length === 0) {
+                throw new Error('No data received from API');
+            }
 
             // Build heatmap data array
             const heatmapData = symbols
                 .map(symbol => {
                     const id = coinGeckoIds[symbol];
-                    if (!id || !data[id]) return null;
+                    if (!id || !data[id]) {
+                        console.warn(`No data for ${symbol} (${id})`);
+                        return null;
+                    }
 
                     return {
                         symbol: symbol,
@@ -1086,11 +1109,31 @@ class FeatureManager {
                 .filter(item => item !== null)
                 .sort((a, b) => b.change24h - a.change24h); // Sort by % change descending
 
+            console.log('Rendering', heatmapData.length, 'tokens');
+
+            if (heatmapData.length === 0) {
+                throw new Error('No valid token data to display');
+            }
+
             this.renderHeatmap(heatmapData);
 
         } catch (error) {
             console.error('Error fetching heatmap data:', error);
-            heatmapGrid.innerHTML = '<div class="heatmap-loading">Error loading market data. Please try again.</div>';
+            let errorMsg = 'Error loading market data. ';
+
+            if (error.name === 'AbortError') {
+                errorMsg += 'Request timed out. ';
+            } else if (error.message.includes('429')) {
+                errorMsg += 'Rate limit exceeded. ';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMsg += 'Network error. Check your connection. ';
+            } else {
+                errorMsg += error.message + ' ';
+            }
+
+            errorMsg += 'Please try again in a moment.';
+
+            heatmapGrid.innerHTML = `<div class="heatmap-loading">${errorMsg}</div>`;
         }
     }
 
