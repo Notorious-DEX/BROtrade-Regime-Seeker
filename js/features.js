@@ -175,37 +175,24 @@ class FeatureManager {
         const btcDomDisplay = document.getElementById('btc-dom-display');
         const adxDisplay = document.getElementById('adx-display');
 
-        // Show/hide individual items based on settings using inline styles with !important
+        // Show/hide individual items based on settings
         if (fearGreedDisplay) {
-            if (this.settings.fearGreed) {
-                fearGreedDisplay.style.removeProperty('display');
-            } else {
-                fearGreedDisplay.style.setProperty('display', 'none', 'important');
-            }
+            console.log('Fear & Greed toggle:', this.settings.fearGreed);
+            fearGreedDisplay.style.display = this.settings.fearGreed ? 'inline' : 'none';
         }
         if (btcDomDisplay) {
-            if (this.settings.btcDom) {
-                btcDomDisplay.style.removeProperty('display');
-            } else {
-                btcDomDisplay.style.setProperty('display', 'none', 'important');
-            }
+            console.log('BTC.D toggle:', this.settings.btcDom);
+            btcDomDisplay.style.display = this.settings.btcDom ? 'inline' : 'none';
         }
         if (adxDisplay) {
-            if (this.settings.showADX) {
-                adxDisplay.style.removeProperty('display');
-            } else {
-                adxDisplay.style.setProperty('display', 'none', 'important');
-            }
+            console.log('ADX toggle:', this.settings.showADX);
+            adxDisplay.style.display = this.settings.showADX ? 'inline' : 'none';
         }
 
         // Show container if any item is enabled
         if (marketInfo) {
             const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
-            if (anyEnabled) {
-                marketInfo.style.removeProperty('display');
-            } else {
-                marketInfo.style.setProperty('display', 'none', 'important');
-            }
+            marketInfo.style.display = anyEnabled ? 'flex' : 'none';
         }
 
         // Apply Confluence Badge
@@ -215,7 +202,7 @@ class FeatureManager {
         } else {
             // Immediately hide badge when setting is disabled
             if (confluenceBadge) {
-                confluenceBadge.style.setProperty('display', 'none', 'important');
+                confluenceBadge.classList.add('hidden');
             }
         }
 
@@ -235,7 +222,7 @@ class FeatureManager {
         if (!this.settings.confluenceBadge) {
             const badge = document.getElementById('confluence-badge');
             if (badge) {
-                badge.style.setProperty('display', 'none', 'important');
+                badge.classList.add('hidden');
             }
             return;
         }
@@ -257,7 +244,7 @@ class FeatureManager {
         if (!badge || !badgeContent || !badgeText || !badgeCount) return;
 
         if (uptrends >= Math.ceil(total * 0.6)) {
-            badge.style.removeProperty('display');
+            badge.classList.remove('hidden');
             // Special text for 100% confluence
             if (uptrends === total) {
                 badgeText.textContent = 'UPTREND CONFIRMED';
@@ -269,7 +256,7 @@ class FeatureManager {
             badgeContent.classList.add('bullish');
             badgeContent.classList.remove('bearish');
         } else if (downtrends >= Math.ceil(total * 0.6)) {
-            badge.style.removeProperty('display');
+            badge.classList.remove('hidden');
             // Special text for 100% confluence
             if (downtrends === total) {
                 badgeText.textContent = 'DOWNTREND CONFIRMED';
@@ -281,7 +268,7 @@ class FeatureManager {
             badgeContent.classList.add('bearish');
             badgeContent.classList.remove('bullish');
         } else {
-            badge.style.setProperty('display', 'none', 'important');
+            badge.classList.add('hidden');
         }
     }
 
