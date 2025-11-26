@@ -139,33 +139,8 @@ class RegimeSeekerApp {
             this.startAutoUpdate(); // Restart with new interval
         });
 
-        // Sound toggle
-        document.getElementById('sound-toggle').addEventListener('change', (e) => {
-            this.soundEnabled = e.target.checked;
-            this.soundGenerator.setEnabled(this.soundEnabled);
-        });
-
-        // Regime colors toggle
-        document.getElementById('colors-toggle').addEventListener('change', (e) => {
-            this.regimeColorsEnabled = e.target.checked;
-            this.updateChart();
-        });
-
-        // Volume filter toggle
-        document.getElementById('volume-filter-toggle').addEventListener('change', (e) => {
-            this.volumeFilterEnabled = e.target.checked;
-            this.updateIndicatorConfig();
-            this.fetchData();
-        });
-
-        // Volume multiplier selector
-        document.getElementById('volume-multiplier').addEventListener('change', (e) => {
-            this.volumeMultiplier = parseFloat(e.target.value);
-            this.updateIndicatorConfig();
-            if (this.volumeFilterEnabled) {
-                this.fetchData();
-            }
-        });
+        // NOTE: Sound, Regime Colors, Volume Filter controls removed
+        // These settings are now managed through the Settings panel (features.js)
 
         // Reset view button
         document.getElementById('reset-view').addEventListener('click', () => {

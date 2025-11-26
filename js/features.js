@@ -156,16 +156,29 @@ class FeatureManager {
 
         // ===== MARKET DATA SETTINGS =====
 
-        // Apply Fear & Greed / BTC Dominance
+        // Apply Fear & Greed / BTC Dominance / ADX
         const marketInfo = document.getElementById('market-info');
-        if (this.settings.fearGreed || this.settings.btcDom) {
-            marketInfo.style.display = 'flex';
-            document.getElementById('fear-greed-display').style.display =
-                this.settings.fearGreed ? 'inline' : 'none';
-            document.getElementById('btc-dom-display').style.display =
-                this.settings.btcDom ? 'inline' : 'none';
-        } else {
-            marketInfo.style.display = 'none';
+        const fearGreedDisplay = document.getElementById('fear-greed-display');
+        const btcDomDisplay = document.getElementById('btc-dom-display');
+        const adxDisplay = document.getElementById('adx-display');
+
+        // Show/hide individual items
+        if (fearGreedDisplay) {
+            fearGreedDisplay.style.display = this.settings.fearGreed ? 'inline' : 'none';
+        }
+        if (btcDomDisplay) {
+            btcDomDisplay.style.display = this.settings.btcDom ? 'inline' : 'none';
+        }
+
+        // ADX is always shown
+        if (adxDisplay) {
+            adxDisplay.style.display = 'inline';
+        }
+
+        // Show container if any item is enabled (or ADX which is always on)
+        if (marketInfo) {
+            const anyEnabled = this.settings.fearGreed || this.settings.btcDom || true; // Always show because ADX is always on
+            marketInfo.style.display = anyEnabled ? 'flex' : 'none';
         }
 
         // Apply Confluence Badge
@@ -354,53 +367,8 @@ class FeatureManager {
     }
 
     syncLegacyControls() {
-        // Sync with existing controls in the UI
-        const soundToggle = document.getElementById('sound-toggle');
-        const colorsToggle = document.getElementById('colors-toggle');
-        const volumeFilterToggle = document.getElementById('volume-filter-toggle');
-        const volumeMultiplier = document.getElementById('volume-multiplier');
-
-        if (soundToggle) soundToggle.checked = this.settings.sound;
-        if (colorsToggle) colorsToggle.checked = this.settings.regimeColors;
-        if (volumeFilterToggle) volumeFilterToggle.checked = this.settings.volumeFilter;
-        if (volumeMultiplier) volumeMultiplier.value = this.settings.volumeMultiplier;
-
-        // Add listeners to sync settings when legacy controls change (one-time setup)
-        if (!this.legacyListenersAdded) {
-            if (soundToggle) {
-                soundToggle.addEventListener('change', (e) => {
-                    this.settings.sound = e.target.checked;
-                    this.saveSettings();
-                    document.getElementById('setting-sound').checked = e.target.checked;
-                });
-            }
-
-            if (colorsToggle) {
-                colorsToggle.addEventListener('change', (e) => {
-                    this.settings.regimeColors = e.target.checked;
-                    this.saveSettings();
-                    document.getElementById('setting-regime-colors').checked = e.target.checked;
-                });
-            }
-
-            if (volumeFilterToggle) {
-                volumeFilterToggle.addEventListener('change', (e) => {
-                    this.settings.volumeFilter = e.target.checked;
-                    this.saveSettings();
-                    document.getElementById('setting-volume-filter').checked = e.target.checked;
-                });
-            }
-
-            if (volumeMultiplier) {
-                volumeMultiplier.addEventListener('change', (e) => {
-                    this.settings.volumeMultiplier = parseFloat(e.target.value);
-                    this.saveSettings();
-                    document.getElementById('setting-volume-mult').value = e.target.value;
-                });
-            }
-
-            this.legacyListenersAdded = true;
-        }
+        // Legacy controls have been removed - all settings now managed through settings panel
+        // This function is kept for potential future use
     }
 
     // ================== MULTI-TIMEFRAME PANEL ==================
@@ -868,12 +836,41 @@ class FeatureManager {
     initMarketData() {
         this.fetchFearGreedIndex();
         this.fetchBTCDominance();
+        this.updateADX();
 
-        // Update every 5 minutes
+        // Update every 5 minutes for F&G and BTC Dom
         setInterval(() => {
             this.fetchFearGreedIndex();
             this.fetchBTCDominance();
         }, 300000);
+
+        // Update ADX every 5 seconds (tied to chart updates)
+        setInterval(() => {
+            this.updateADX();
+        }, 5000);
+    }
+
+    updateADX() {
+        if (!this.app || !this.app.data || this.app.data.length === 0) {
+            return;
+        }
+
+        // Get the latest ADX value from the most recent candle
+        const latestCandle = this.app.data[this.app.data.length - 1];
+        const adx = latestCandle.adx;
+
+        if (adx !== undefined && adx !== null) {
+            const adxValue = document.getElementById('adx-value');
+            if (adxValue) {
+                adxValue.textContent = adx.toFixed(1);
+
+                // Update tooltip
+                const adxDisplay = document.getElementById('adx-display');
+                if (adxDisplay) {
+                    adxDisplay.title = `Average Directional Index: ${adx.toFixed(2)} ${adx > 25 ? '(Strong Trend)' : '(Weak Trend)'}`;
+                }
+            }
+        }
     }
 
     async fetchFearGreedIndex() {
