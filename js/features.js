@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.17 - Functional settings, MTF panel repositioned, and more
+ * v0.18 - MTF confluence fix, centered market info
  */
 
 // Feature Manager Class
@@ -500,14 +500,15 @@ class FeatureManager {
         let confluenceType = 'neutral';
         let confluenceText = 'No confluence';
 
-        if (uptrends >= Math.ceil(total * 0.6)) {
+        // Always calculate percentage, even if below 60%
+        if (uptrends > downtrends && uptrends > 0) {
             confluencePercent = (uptrends / total) * 100;
-            confluenceType = 'bullish';
-            confluenceText = `${uptrends}/${total} Bullish Aligned`;
-        } else if (downtrends >= Math.ceil(total * 0.6)) {
+            confluenceType = uptrends >= Math.ceil(total * 0.6) ? 'bullish' : 'neutral';
+            confluenceText = `${uptrends}/${total} Bullish${uptrends >= Math.ceil(total * 0.6) ? ' Aligned' : ''}`;
+        } else if (downtrends > uptrends && downtrends > 0) {
             confluencePercent = (downtrends / total) * 100;
-            confluenceType = 'bearish';
-            confluenceText = `${downtrends}/${total} Bearish Aligned`;
+            confluenceType = downtrends >= Math.ceil(total * 0.6) ? 'bearish' : 'neutral';
+            confluenceText = `${downtrends}/${total} Bearish${downtrends >= Math.ceil(total * 0.6) ? ' Aligned' : ''}`;
         }
 
         // Update MTF panel confluence
@@ -528,7 +529,7 @@ class FeatureManager {
             confluenceTip.textContent = confluenceText;
         }
 
-        // Update badge
+        // Update badge (only show if >= 60%)
         if (this.settings.confluenceBadge) {
             this.updateConfluenceBadge();
         }
@@ -984,7 +985,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.17</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.18</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';

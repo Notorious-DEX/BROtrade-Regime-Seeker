@@ -44,9 +44,9 @@ body {
 
 /* Header */
 .header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 10px;
     padding: 10px 15px;
     background-color: var(--theme-secondary-bg);
@@ -56,10 +56,18 @@ body {
     flex-shrink: 0;
 }
 
+.title {
+    justify-self: start;
+}
+
 .header-center {
-    flex: 1;
     display: flex;
     justify-content: center;
+    justify-self: center;
+}
+
+.header-right {
+    justify-self: end;
 }
 
 .market-info {
