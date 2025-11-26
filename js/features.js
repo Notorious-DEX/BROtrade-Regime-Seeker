@@ -33,14 +33,11 @@ class FeatureManager {
             sound: true,
             volumeFilter: false,
             volumeMultiplier: 2,
-            mtfPanel: false,
-            tipsPanel: false,
             fearGreed: true,
             btcDom: true,
             confluenceBadge: false,
             stormWarning: false,
-            eventMarkers: false,
-            tooltips: true
+            eventMarkers: false
         };
 
         const saved = localStorage.getItem('brotrade_settings');
@@ -78,14 +75,11 @@ class FeatureManager {
             'setting-atr-bands': 'atrBands',
             'setting-sound': 'sound',
             'setting-volume-filter': 'volumeFilter',
-            'setting-mtf-panel': 'mtfPanel',
-            'setting-tips-panel': 'tipsPanel',
             'setting-fear-greed': 'fearGreed',
             'setting-btc-dom': 'btcDom',
             'setting-confluence-badge': 'confluenceBadge',
             'setting-storm-warning': 'stormWarning',
-            'setting-event-markers': 'eventMarkers',
-            'setting-tooltips': 'tooltips'
+            'setting-event-markers': 'eventMarkers'
         };
 
         Object.entries(settingInputs).forEach(([id, key]) => {
@@ -107,6 +101,7 @@ class FeatureManager {
             volumeMultSelect.addEventListener('change', () => {
                 this.settings.volumeMultiplier = parseFloat(volumeMultSelect.value);
                 this.saveSettings();
+                this.applySettings();
             });
         }
     }
@@ -159,28 +154,7 @@ class FeatureManager {
             }
         }
 
-        // ===== PANELS & TOOLS SETTINGS =====
-
-        // Apply MTF Panel
-        const mtfPanel = document.getElementById('mtf-panel');
-        if (this.settings.mtfPanel) {
-            mtfPanel.classList.remove('collapsed');
-            if (!this.mtfInitialized) {
-                this.startMTFUpdates();
-                this.mtfInitialized = true;
-            }
-        } else {
-            mtfPanel.classList.add('collapsed');
-        }
-
-        // Apply Tips Panel (now on right side)
-        const tipsPanel = document.getElementById('tips-panel');
-        if (this.settings.tipsPanel) {
-            tipsPanel.classList.remove('collapsed');
-            this.updateTipsContent();
-        } else {
-            tipsPanel.classList.add('collapsed');
-        }
+        // ===== MARKET DATA SETTINGS =====
 
         // Apply Fear & Greed / BTC Dominance
         const marketInfo = document.getElementById('market-info');
@@ -198,19 +172,124 @@ class FeatureManager {
         if (this.settings.confluenceBadge) {
             this.updateConfluenceBadge();
         } else {
-            document.getElementById('confluence-badge').classList.add('hidden');
+            const badge = document.getElementById('confluence-badge');
+            if (badge) badge.classList.add('hidden');
+        }
+
+        // Apply Storm Warning
+        if (this.settings.stormWarning) {
+            this.updateStormWarning();
+        } else {
+            this.removeStormWarning();
+        }
+
+        // Apply Economic Events
+        if (this.settings.eventMarkers) {
+            this.updateEconomicEvents();
+        } else {
+            this.removeEconomicEvents();
         }
 
         // Sync with legacy controls
         this.syncLegacyControls();
     }
 
+    updateConfluenceBadge() {
+        if (!this.mtfData || Object.keys(this.mtfData).length === 0) {
+            return;
+        }
+
+        const regimes = Object.values(this.mtfData).map(d => d.regime.currentState);
+        const uptrends = regimes.filter(r => r && r.includes('UPTREND')).length;
+        const downtrends = regimes.filter(r => r && r.includes('DOWNTREND')).length;
+        const total = regimes.length;
+
+        const badge = document.getElementById('confluence-badge');
+        const badgeContent = badge ? badge.querySelector('.confluence-badge-content') : null;
+        const badgeText = document.getElementById('confluence-badge-text');
+        const badgeCount = document.getElementById('confluence-badge-count');
+
+        if (!badge || !badgeContent || !badgeText || !badgeCount) return;
+
+        if (uptrends >= Math.ceil(total * 0.6)) {
+            badge.classList.remove('hidden');
+            badgeText.textContent = 'HIGH CONFLUENCE';
+            badgeCount.textContent = `${uptrends}/${total} BULLISH ↑`;
+            badgeContent.classList.add('bullish');
+            badgeContent.classList.remove('bearish');
+        } else if (downtrends >= Math.ceil(total * 0.6)) {
+            badge.classList.remove('hidden');
+            badgeText.textContent = 'HIGH CONFLUENCE';
+            badgeCount.textContent = `${downtrends}/${total} BEARISH ↓`;
+            badgeContent.classList.add('bearish');
+            badgeContent.classList.remove('bullish');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    updateStormWarning() {
+        if (!this.app || !this.app.indicator) return;
+
+        const adx = this.app.indicator.adx;
+        const diPlus = this.app.indicator.diPlus;
+        const diMinus = this.app.indicator.diMinus;
+
+        // Storm Warning: Very high ADX (>50) with diverging DI lines
+        const isStorm = adx > 50 && Math.abs(diPlus - diMinus) > 30;
+
+        if (isStorm) {
+            this.showStormWarning();
+        } else {
+            this.removeStormWarning();
+        }
+    }
+
+    showStormWarning() {
+        let warning = document.getElementById('storm-warning');
+        if (!warning) {
+            warning = document.createElement('div');
+            warning.id = 'storm-warning';
+            warning.className = 'storm-warning';
+            warning.innerHTML = `
+                <div class="storm-warning-content">
+                    <span class="storm-icon">⚠️</span>
+                    <span class="storm-text">STORM WARNING: Extreme Volatility Detected</span>
+                </div>
+            `;
+            const chartSection = document.querySelector('.chart-section');
+            if (chartSection) {
+                chartSection.appendChild(warning);
+            }
+        }
+        warning.classList.remove('hidden');
+    }
+
+    removeStormWarning() {
+        const warning = document.getElementById('storm-warning');
+        if (warning) {
+            warning.classList.add('hidden');
+        }
+    }
+
+    updateEconomicEvents() {
+        // Placeholder for economic events
+        // This would require an API integration for economic calendar
+        console.log('Economic events feature requires API integration');
+    }
+
+    removeEconomicEvents() {
+        const markers = document.querySelectorAll('.event-marker');
+        markers.forEach(marker => marker.remove());
+    }
+
     createATRBands() {
         if (!this.app || !this.app.chart || !this.app.data) return;
 
-        // Calculate ATR if not already done
-        if (!this.app.indicator || !this.app.indicator.atr) {
-            console.warn('ATR data not available');
+        // Check if ATR data is available on candles
+        const hasATR = this.app.data.some(candle => candle.atr !== undefined && candle.atr !== null);
+        if (!hasATR) {
+            console.warn('ATR data not available on candles');
             return;
         }
 

@@ -449,6 +449,8 @@ body {
 .status {
     color: var(--theme-caution);
     font-weight: 500;
+    flex: 1;
+    text-align: center;
 }
 
 .status.STRONG_UPTREND {
@@ -870,6 +872,55 @@ body {
     font-size: 13px;
     font-weight: 700;
     color: #fff;
+}
+
+/* Storm Warning */
+.storm-warning {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 150;
+    animation: pulseWarning 2s ease-in-out infinite;
+}
+
+.storm-warning.hidden {
+    display: none;
+}
+
+.storm-warning-content {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(185, 28, 28, 0.95));
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 2px solid #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+}
+
+.storm-icon {
+    font-size: 24px;
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+.storm-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulseWarning {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
 }
 
 /* Tips Panel (Bottom) */
