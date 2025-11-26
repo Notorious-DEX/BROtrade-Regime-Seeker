@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.16 - Multi-timeframe, Tips, Calculator, and more
+ * v0.17 - Functional settings, MTF panel repositioned, and more
  */
 
 // Feature Manager Class
@@ -112,6 +112,55 @@ class FeatureManager {
     }
 
     applySettings() {
+        // ===== CHART DISPLAY SETTINGS =====
+
+        // Regime Colors
+        if (this.app) {
+            this.app.regimeColorsEnabled = this.settings.regimeColors;
+            if (this.app.data && this.app.data.length > 0) {
+                this.app.updateChart();
+            }
+        }
+
+        // EMA Toggle
+        if (this.app && this.app.emaSeries) {
+            this.app.emaSeries.applyOptions({
+                visible: this.settings.showEMA
+            });
+        }
+
+        // ATR Bands Toggle
+        if (this.settings.atrBands) {
+            this.createATRBands();
+        } else {
+            this.removeATRBands();
+        }
+
+        // ===== INDICATORS SETTINGS =====
+
+        // Sound
+        if (this.app) {
+            this.app.soundEnabled = this.settings.sound;
+            if (this.app.soundGenerator) {
+                this.app.soundGenerator.setEnabled(this.settings.sound);
+            }
+        }
+
+        // Volume Filter
+        if (this.app) {
+            this.app.volumeFilterEnabled = this.settings.volumeFilter;
+            this.app.volumeMultiplier = this.settings.volumeMultiplier;
+            // Re-process data with new volume filter settings
+            if (this.app.data && this.app.data.length > 0 && this.app.indicator) {
+                this.app.indicator.volumeFilterEnabled = this.settings.volumeFilter;
+                this.app.indicator.volumeMultiplier = this.settings.volumeMultiplier;
+                this.app.indicator.processData(this.app.data);
+                this.app.updateChart();
+            }
+        }
+
+        // ===== PANELS & TOOLS SETTINGS =====
+
         // Apply MTF Panel
         const mtfPanel = document.getElementById('mtf-panel');
         if (this.settings.mtfPanel) {
@@ -156,6 +205,75 @@ class FeatureManager {
         this.syncLegacyControls();
     }
 
+    createATRBands() {
+        if (!this.app || !this.app.chart || !this.app.data) return;
+
+        // Calculate ATR if not already done
+        if (!this.app.indicator || !this.app.indicator.atr) {
+            console.warn('ATR data not available');
+            return;
+        }
+
+        // Remove existing bands if any
+        this.removeATRBands();
+
+        // Create upper and lower band series
+        this.atrUpperBand = this.app.chart.addLineSeries({
+            color: 'rgba(139, 92, 246, 0.3)',
+            lineWidth: 1,
+            lineStyle: 2, // Dashed
+            title: 'ATR Upper',
+            priceLineVisible: false,
+            lastValueVisible: false,
+        });
+
+        this.atrLowerBand = this.app.chart.addLineSeries({
+            color: 'rgba(139, 92, 246, 0.3)',
+            lineWidth: 1,
+            lineStyle: 2, // Dashed
+            title: 'ATR Lower',
+            priceLineVisible: false,
+            lastValueVisible: false,
+        });
+
+        // Calculate and set band data
+        this.updateATRBands();
+    }
+
+    updateATRBands() {
+        if (!this.atrUpperBand || !this.atrLowerBand || !this.app || !this.app.data) return;
+
+        const offsetSeconds = this.app.utcOffset * 3600;
+        const bandData = this.app.data
+            .filter(candle => candle.atr)
+            .map(candle => {
+                const atr = candle.atr;
+                const middle = (candle.high + candle.low) / 2;
+                return {
+                    time: candle.time + offsetSeconds,
+                    upper: middle + (atr * 2),
+                    lower: middle - (atr * 2)
+                };
+            });
+
+        const upperData = bandData.map(d => ({ time: d.time, value: d.upper }));
+        const lowerData = bandData.map(d => ({ time: d.time, value: d.lower }));
+
+        this.atrUpperBand.setData(upperData);
+        this.atrLowerBand.setData(lowerData);
+    }
+
+    removeATRBands() {
+        if (this.atrUpperBand && this.app && this.app.chart) {
+            this.app.chart.removeSeries(this.atrUpperBand);
+            this.atrUpperBand = null;
+        }
+        if (this.atrLowerBand && this.app && this.app.chart) {
+            this.app.chart.removeSeries(this.atrLowerBand);
+            this.atrLowerBand = null;
+        }
+    }
+
     syncLegacyControls() {
         // Sync with existing controls in the UI
         const soundToggle = document.getElementById('sound-toggle');
@@ -167,6 +285,43 @@ class FeatureManager {
         if (colorsToggle) colorsToggle.checked = this.settings.regimeColors;
         if (volumeFilterToggle) volumeFilterToggle.checked = this.settings.volumeFilter;
         if (volumeMultiplier) volumeMultiplier.value = this.settings.volumeMultiplier;
+
+        // Add listeners to sync settings when legacy controls change (one-time setup)
+        if (!this.legacyListenersAdded) {
+            if (soundToggle) {
+                soundToggle.addEventListener('change', (e) => {
+                    this.settings.sound = e.target.checked;
+                    this.saveSettings();
+                    document.getElementById('setting-sound').checked = e.target.checked;
+                });
+            }
+
+            if (colorsToggle) {
+                colorsToggle.addEventListener('change', (e) => {
+                    this.settings.regimeColors = e.target.checked;
+                    this.saveSettings();
+                    document.getElementById('setting-regime-colors').checked = e.target.checked;
+                });
+            }
+
+            if (volumeFilterToggle) {
+                volumeFilterToggle.addEventListener('change', (e) => {
+                    this.settings.volumeFilter = e.target.checked;
+                    this.saveSettings();
+                    document.getElementById('setting-volume-filter').checked = e.target.checked;
+                });
+            }
+
+            if (volumeMultiplier) {
+                volumeMultiplier.addEventListener('change', (e) => {
+                    this.settings.volumeMultiplier = parseFloat(e.target.value);
+                    this.saveSettings();
+                    document.getElementById('setting-volume-mult').value = e.target.value;
+                });
+            }
+
+            this.legacyListenersAdded = true;
+        }
     }
 
     // ================== MULTI-TIMEFRAME PANEL ==================
@@ -754,7 +909,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.16</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.17</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';

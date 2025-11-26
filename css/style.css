@@ -592,9 +592,13 @@ body {
     overflow: hidden;
 }
 
-/* Multi-Timeframe Panel (Left Sidebar) */
+/* Multi-Timeframe Panel (Far Left of Screen) */
 .mtf-panel {
-    position: relative;
+    position: fixed;
+    left: 0;
+    top: 120px; /* Below header and controls */
+    bottom: 60px; /* Above footer */
+    z-index: 200;
     transition: all 0.3s ease;
 }
 
