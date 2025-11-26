@@ -179,19 +179,35 @@ class FeatureManager {
 
         // Show/hide individual items based on settings
         if (fearGreedDisplay) {
-            fearGreedDisplay.style.display = this.settings.fearGreed ? 'inline' : 'none';
+            if (this.settings.fearGreed) {
+                fearGreedDisplay.style.removeProperty('display');
+            } else {
+                fearGreedDisplay.style.display = 'none';
+            }
         }
         if (btcDomDisplay) {
-            btcDomDisplay.style.display = this.settings.btcDom ? 'inline' : 'none';
+            if (this.settings.btcDom) {
+                btcDomDisplay.style.removeProperty('display');
+            } else {
+                btcDomDisplay.style.display = 'none';
+            }
         }
         if (adxDisplay) {
-            adxDisplay.style.display = this.settings.showADX ? 'inline' : 'none';
+            if (this.settings.showADX) {
+                adxDisplay.style.removeProperty('display');
+            } else {
+                adxDisplay.style.display = 'none';
+            }
         }
 
         // Show container if any item is enabled
         if (marketInfo) {
             const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
-            marketInfo.style.display = anyEnabled ? 'flex' : 'none';
+            if (anyEnabled) {
+                marketInfo.style.removeProperty('display');
+            } else {
+                marketInfo.style.display = 'none';
+            }
         }
 
         // Apply Confluence Badge
@@ -537,7 +553,9 @@ class FeatureManager {
         const confluenceTip = document.getElementById('confluence-tip');
 
         if (confluenceFill) {
-            confluenceFill.style.width = `${confluencePercent}%`;
+            // Ensure minimum 5% width for visibility
+            const displayPercent = Math.max(confluencePercent, confluencePercent > 0 ? 5 : 0);
+            confluenceFill.style.width = `${displayPercent}%`;
             confluenceFill.className = `confluence-fill ${confluenceType}`;
         }
 
