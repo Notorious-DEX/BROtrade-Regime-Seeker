@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.21 - Expanded to 50 tokens, added market heatmap visualization
+ * v0.22 - Footer layout improved, Kraken default, vertical tab text
  */
 
 // Feature Manager Class
@@ -1232,7 +1232,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.21</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.22</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';
