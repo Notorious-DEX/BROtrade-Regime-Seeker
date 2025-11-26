@@ -227,6 +227,22 @@ class FilteredSignalsIndicator {
         // Calculate ADX and directional indicators
         const { diPlus, diMinus, adx } = this.calculateADX(candles);
 
+        // Calculate ATR (Average True Range)
+        const trueRanges = candles.map((candle, i) => {
+            const high = candle.high;
+            const low = candle.low;
+            const prevClose = i > 0 ? candles[i - 1].close : candle.close;
+
+            const tr = Math.max(
+                high - low,
+                Math.abs(high - prevClose),
+                Math.abs(low - prevClose)
+            );
+            return tr;
+        });
+
+        const atr = this.calculateRMA(trueRanges, this.adxLength);
+
         // Add indicators to candles and determine regime
         let previousState = "RANGING";
         const result = candles.map((candle, i) => {
@@ -281,6 +297,7 @@ class FilteredSignalsIndicator {
                 diPlus: diPlusVal,
                 diMinus: diMinusVal,
                 adx: adxVal,
+                atr: atr[i],
                 volume: volume,
                 volumeAvg: volumeAvg,
                 state: state
