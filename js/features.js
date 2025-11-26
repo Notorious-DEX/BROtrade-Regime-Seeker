@@ -48,6 +48,7 @@ class FeatureManager {
             volumeMultiplier: 2,
             fearGreed: true,
             btcDom: true,
+            showADX: true,
             confluenceBadge: false,
             stormWarning: false,
             eventMarkers: false
@@ -90,6 +91,7 @@ class FeatureManager {
             'setting-volume-filter': 'volumeFilter',
             'setting-fear-greed': 'fearGreed',
             'setting-btc-dom': 'btcDom',
+            'setting-show-adx': 'showADX',
             'setting-confluence-badge': 'confluenceBadge',
             'setting-storm-warning': 'stormWarning',
             'setting-event-markers': 'eventMarkers'
@@ -175,22 +177,20 @@ class FeatureManager {
         const btcDomDisplay = document.getElementById('btc-dom-display');
         const adxDisplay = document.getElementById('adx-display');
 
-        // Show/hide individual items
+        // Show/hide individual items based on settings
         if (fearGreedDisplay) {
             fearGreedDisplay.style.display = this.settings.fearGreed ? 'inline' : 'none';
         }
         if (btcDomDisplay) {
             btcDomDisplay.style.display = this.settings.btcDom ? 'inline' : 'none';
         }
-
-        // ADX is always shown
         if (adxDisplay) {
-            adxDisplay.style.display = 'inline';
+            adxDisplay.style.display = this.settings.showADX ? 'inline' : 'none';
         }
 
-        // Show container if any item is enabled (or ADX which is always on)
+        // Show container if any item is enabled
         if (marketInfo) {
-            const anyEnabled = this.settings.fearGreed || this.settings.btcDom || true; // Always show because ADX is always on
+            const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
             marketInfo.style.display = anyEnabled ? 'flex' : 'none';
         }
 
@@ -225,7 +225,7 @@ class FeatureManager {
             return;
         }
 
-        const regimes = Object.values(this.mtfData).map(d => d.regime.currentState);
+        const regimes = Object.values(this.mtfData).map(d => d.currentState);
         const uptrends = regimes.filter(r => r && r.includes('UPTREND')).length;
         const downtrends = regimes.filter(r => r && r.includes('DOWNTREND')).length;
         const total = regimes.length;
@@ -301,14 +301,31 @@ class FeatureManager {
     }
 
     updateEconomicEvents() {
-        // Placeholder for economic events
-        // This would require an API integration for economic calendar
-        console.log('Economic events feature requires API integration');
+        // Show placeholder message for economic events
+        let eventNotice = document.getElementById('economic-events-notice');
+        if (!eventNotice) {
+            eventNotice = document.createElement('div');
+            eventNotice.id = 'economic-events-notice';
+            eventNotice.className = 'economic-events-notice';
+            eventNotice.innerHTML = `
+                <div class="economic-notice-content">
+                    <span class="notice-icon">📅</span>
+                    <span class="notice-text">Economic Events: API integration coming soon</span>
+                </div>
+            `;
+            const chartSection = document.querySelector('.chart-section');
+            if (chartSection) {
+                chartSection.appendChild(eventNotice);
+            }
+        }
+        eventNotice.classList.remove('hidden');
     }
 
     removeEconomicEvents() {
-        const markers = document.querySelectorAll('.event-marker');
-        markers.forEach(marker => marker.remove());
+        const eventNotice = document.getElementById('economic-events-notice');
+        if (eventNotice) {
+            eventNotice.classList.add('hidden');
+        }
     }
 
     createATRBands() {
@@ -432,11 +449,14 @@ class FeatureManager {
 
                 if (data && data.length > 50) {
                     // Calculate regime
-                    const regime = calculateRegimeForData(data);
-                    this.mtfData[tf] = { regime, adx: regime.adx };
+                    const regimeData = calculateRegimeForData(data);
+                    this.mtfData[tf] = {
+                        currentState: regimeData.currentState,
+                        adx: regimeData.adx
+                    };
 
                     // Create MTF item
-                    const item = this.createMTFItem(tf, regime);
+                    const item = this.createMTFItem(tf, regimeData);
                     mtfContainer.appendChild(item);
                 }
             } catch (error) {
@@ -490,7 +510,7 @@ class FeatureManager {
     }
 
     updateConfluence() {
-        const regimes = Object.values(this.mtfData).map(d => d.regime.currentState);
+        const regimes = Object.values(this.mtfData).map(d => d.currentState);
 
         const uptrends = regimes.filter(r => r && (r.includes('UPTREND'))).length;
         const downtrends = regimes.filter(r => r && (r.includes('DOWNTREND'))).length;
