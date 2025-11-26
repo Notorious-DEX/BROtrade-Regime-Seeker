@@ -936,6 +936,41 @@ body {
     75% { transform: rotate(5deg); }
 }
 
+/* Economic Events Notice */
+.economic-events-notice {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.economic-events-notice.hidden {
+    display: none;
+}
+
+.economic-notice-content {
+    background: rgba(139, 92, 246, 0.9);
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--theme-ema);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+}
+
+.notice-icon {
+    font-size: 16px;
+}
+
+.notice-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.3px;
+}
+
 /* Tips Panel (Bottom) */
 .tips-panel {
     background-color: var(--theme-secondary-bg);
