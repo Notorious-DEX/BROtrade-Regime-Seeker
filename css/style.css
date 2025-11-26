@@ -639,7 +639,7 @@ body {
     position: absolute;
     left: 0;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) rotate(180deg);
     background-color: var(--theme-secondary-bg);
     border: 1px solid var(--theme-border);
     border-radius: 0 8px 8px 0;
@@ -1131,7 +1131,7 @@ body {
     position: absolute;
     right: 0;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) rotate(180deg);
     background-color: var(--theme-secondary-bg);
     border: 1px solid var(--theme-border);
     border-radius: 8px 0 0 8px;
