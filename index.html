@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BROtrade Regime Seeker v0.19</title>
+    <title>BROtrade Regime Seeker v0.20</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -18,7 +18,7 @@
             <h1 class="title">BROtrade Regime Seeker</h1>
             <div class="header-center">
                 <div class="market-info" id="market-info">
-                    <span class="market-info-item" id="fear-greed-display" title="Crypto Fear & Greed Index">
+                    <span class="market-info-item clickable" id="fear-greed-display" title="Crypto Fear & Greed Index (Click for details)">
                         Fear & Greed: <span id="fear-greed-value">--</span>
                     </span>
                     <span class="market-info-item" id="btc-dom-display" title="Bitcoin Dominance">
@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="version">v0.19</div>
+                <div class="version">v0.20</div>
                 <button id="settings-btn" class="settings-btn" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -448,6 +448,109 @@
                     <div class="export-actions">
                         <button class="export-action-btn" id="export-download">💾 Download</button>
                         <button class="export-action-btn secondary" id="export-cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fear & Greed Gauge Modal -->
+        <div id="fear-greed-modal" class="modal hidden">
+            <div class="modal-content gauge-modal-content">
+                <div class="modal-header">
+                    <h3>Crypto Fear & Greed Index</h3>
+                    <button class="modal-close" id="fear-greed-modal-close">&times;</button>
+                </div>
+                <div class="modal-body gauge-modal-body">
+                    <div class="gauge-container">
+                        <svg id="fear-greed-gauge" viewBox="0 0 400 280" class="gauge-svg">
+                            <!-- Background arc segments (colored) -->
+                            <defs>
+                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#dc2626;stop-opacity:1" />
+                                    <stop offset="25%" style="stop-color:#f97316;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#fbbf24;stop-opacity:1" />
+                                    <stop offset="75%" style="stop-color:#84cc16;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#22c55e;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Gauge background arc -->
+                            <path id="gauge-bg-arc"
+                                  d="M 50 230 A 150 150 0 0 1 350 230"
+                                  fill="none"
+                                  stroke="url(#gaugeGradient)"
+                                  stroke-width="40"
+                                  stroke-linecap="round"/>
+
+                            <!-- Center circle -->
+                            <circle cx="200" cy="230" r="10" fill="#8b7bb8"/>
+
+                            <!-- Needle -->
+                            <line id="gauge-needle"
+                                  x1="200" y1="230"
+                                  x2="200" y2="90"
+                                  stroke="#ffffff"
+                                  stroke-width="4"
+                                  stroke-linecap="round"
+                                  style="transform-origin: 200px 230px; transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);"/>
+
+                            <!-- Value text -->
+                            <text id="gauge-value-text"
+                                  x="200" y="200"
+                                  text-anchor="middle"
+                                  class="gauge-value-text">--</text>
+
+                            <!-- Classification text -->
+                            <text id="gauge-classification-text"
+                                  x="200" y="255"
+                                  text-anchor="middle"
+                                  class="gauge-classification-text">Loading...</text>
+                        </svg>
+
+                        <!-- Scale labels -->
+                        <div class="gauge-labels">
+                            <div class="gauge-label gauge-label-left">
+                                <span class="gauge-label-value">0</span>
+                                <span class="gauge-label-name">Extreme Fear</span>
+                            </div>
+                            <div class="gauge-label gauge-label-center">
+                                <span class="gauge-label-value">50</span>
+                                <span class="gauge-label-name">Neutral</span>
+                            </div>
+                            <div class="gauge-label gauge-label-right">
+                                <span class="gauge-label-value">100</span>
+                                <span class="gauge-label-name">Extreme Greed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gauge-info">
+                        <p class="gauge-description">
+                            The Crypto Fear & Greed Index analyzes emotions and sentiments from different sources
+                            and crunches them into one simple number: 0 (Extreme Fear) to 100 (Extreme Greed).
+                        </p>
+                        <div class="gauge-legend">
+                            <div class="gauge-legend-item">
+                                <span class="gauge-legend-color" style="background: #dc2626;"></span>
+                                <span>0-24: Extreme Fear</span>
+                            </div>
+                            <div class="gauge-legend-item">
+                                <span class="gauge-legend-color" style="background: #f97316;"></span>
+                                <span>25-44: Fear</span>
+                            </div>
+                            <div class="gauge-legend-item">
+                                <span class="gauge-legend-color" style="background: #fbbf24;"></span>
+                                <span>45-55: Neutral</span>
+                            </div>
+                            <div class="gauge-legend-item">
+                                <span class="gauge-legend-color" style="background: #84cc16;"></span>
+                                <span>56-74: Greed</span>
+                            </div>
+                            <div class="gauge-legend-item">
+                                <span class="gauge-legend-color" style="background: #22c55e;"></span>
+                                <span>75-100: Extreme Greed</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
