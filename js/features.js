@@ -428,14 +428,28 @@ class FeatureManager {
                 this.updateTipsContent(tab.dataset.tab);
             });
         });
+
+        // Update tips every 5 seconds to catch regime changes
+        setInterval(() => {
+            if (this.settings.tipsPanel) {
+                this.updateTipsContent();
+            }
+        }, 5000);
+    }
+
+    // Public method to be called when regime changes
+    onRegimeChange(newRegime) {
+        if (this.settings.tipsPanel) {
+            this.updateTipsContent();
+        }
     }
 
     updateTipsContent(tab = 'current') {
         const content = document.getElementById('tips-content');
-        const regime = this.app.currentRegime || 'RANGING';
+        const regime = this.app?.indicator?.currentState || 'RANGING';
         const regimeTitle = document.getElementById('tips-regime-title');
 
-        regimeTitle.textContent = `CURRENT REGIME: ${regime.replace('_', ' ')}`;
+        regimeTitle.textContent = regime.replace('_', ' ');
 
         const tipsData = this.getTipsData(regime);
 
@@ -711,12 +725,52 @@ class FeatureManager {
         }
 
         try {
-            // Get format selection
+            // Get options
             const format = document.querySelector('input[name="export-format"]:checked')?.value || 'png';
             const resolution = document.querySelector('input[name="export-resolution"]:checked')?.value || 'screen';
+            const includeBranding = document.getElementById('export-branding')?.checked || false;
+            const includeDateTime = document.getElementById('export-datetime')?.checked || false;
+            const includeInfo = document.getElementById('export-info')?.checked || false;
 
             // Get the chart section
             const chartSection = document.querySelector('.chart-section');
+
+            // Add export overlay if needed
+            let exportOverlay = null;
+            if (includeBranding || includeDateTime || includeInfo) {
+                exportOverlay = document.createElement('div');
+                exportOverlay.style.cssText = `
+                    position: absolute;
+                    bottom: 10px;
+                    right: 10px;
+                    background: rgba(26, 15, 46, 0.9);
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    border: 1px solid #8b5cf6;
+                    font-family: 'Segoe UI', sans-serif;
+                    color: #e0d4f7;
+                    z-index: 9999;
+                `;
+
+                let overlayHTML = '';
+                if (includeBranding) {
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.16</div>';
+                }
+                if (includeInfo) {
+                    const symbol = this.app?.currentCrypto || 'BTC';
+                    const timeframe = this.app?.currentTimeframe || '1h';
+                    const regime = this.app?.indicator?.currentState || 'RANGING';
+                    overlayHTML += `<div style="font-size: 12px; margin-bottom: 2px;">${symbol}/USDT | ${timeframe} | ${regime.replace('_', ' ')}</div>`;
+                }
+                if (includeDateTime) {
+                    const now = new Date().toLocaleString();
+                    overlayHTML += `<div style="font-size: 11px; color: #8b7bb8;">${now}</div>`;
+                }
+
+                exportOverlay.innerHTML = overlayHTML;
+                chartSection.style.position = 'relative';
+                chartSection.appendChild(exportOverlay);
+            }
 
             // Set scale based on resolution
             let scale = 1;
@@ -731,6 +785,11 @@ class FeatureManager {
                 useCORS: true
             });
 
+            // Remove overlay
+            if (exportOverlay) {
+                chartSection.removeChild(exportOverlay);
+            }
+
             // Convert to desired format
             const imageType = format === 'jpg' ? 'image/jpeg' : 'image/png';
             const imageData = canvas.toDataURL(imageType, 0.95);
@@ -738,8 +797,8 @@ class FeatureManager {
             // Create download link
             const link = document.createElement('a');
             const timestamp = new Date().toISOString().split('T')[0];
-            const symbol = this.app.currentCrypto || 'BTC';
-            const timeframe = this.app.currentTimeframe || '1h';
+            const symbol = this.app?.currentCrypto || 'BTC';
+            const timeframe = this.app?.currentTimeframe || '1h';
             link.download = `brotrade-${symbol}-${timeframe}-${timestamp}.${format}`;
             link.href = imageData;
             link.click();
@@ -761,33 +820,21 @@ function calculateRegimeForData(candles) {
         return { currentState: 'RANGING', adx: 0 };
     }
 
-    // Use the indicators module if available
-    if (typeof calculateADX === 'function') {
-        const highs = candles.map(c => c.high);
-        const lows = candles.map(c => c.low);
-        const closes = candles.map(c => c.close);
+    try {
+        // Create a temporary indicator instance
+        const tempIndicator = new FilteredSignalsIndicator();
 
-        const adxData = calculateADX(highs, lows, closes);
-        const emaData = calculateEMA(closes, 50);
+        // Process the data
+        tempIndicator.processData(candles);
 
-        const currentClose = closes[closes.length - 1];
-        const currentEMA = emaData[emaData.length - 1];
-        const currentADX = adxData.adx[adxData.adx.length - 1];
-        const currentDIPlus = adxData.diPlus[adxData.diPlus.length - 1];
-        const currentDIMinus = adxData.diMinus[adxData.diMinus.length - 1];
-
-        let currentState = 'RANGING';
-
-        if (currentDIPlus > currentDIMinus && currentClose > currentEMA) {
-            currentState = currentADX > 25 ? 'STRONG_UPTREND' : 'WEAK_UPTREND';
-        } else if (currentDIMinus > currentDIPlus && currentClose < currentEMA) {
-            currentState = currentADX > 25 ? 'STRONG_DOWNTREND' : 'WEAK_DOWNTREND';
-        }
-
-        return { currentState, adx: currentADX };
+        return {
+            currentState: tempIndicator.currentState || 'RANGING',
+            adx: tempIndicator.adx || 0
+        };
+    } catch (error) {
+        console.error('Error calculating regime:', error);
+        return { currentState: 'RANGING', adx: 0 };
     }
-
-    return { currentState: 'RANGING', adx: 0 };
 }
 
 // Initialize features when app is ready
