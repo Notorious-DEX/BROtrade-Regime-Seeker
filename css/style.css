@@ -1362,8 +1362,14 @@ body {
     transform: translateY(-1px);
 }
 
-/* Export Button & Modal */
-.export-btn {
+/* Footer Buttons */
+.footer-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.footer-btn {
     padding: 8px 16px;
     background-color: var(--theme-ema);
     color: var(--theme-purple-light);
@@ -1375,7 +1381,7 @@ body {
     transition: all 0.3s ease;
 }
 
-.export-btn:hover {
+.footer-btn:hover {
     background-color: #7c3aed;
     transform: translateY(-1px);
 }
@@ -1626,6 +1632,164 @@ body {
     height: 20px;
     border-radius: 3px;
     flex-shrink: 0;
+}
+
+/* Market Heatmap Modal */
+.heatmap-modal-content {
+    max-width: 900px;
+    max-height: 85vh;
+}
+
+.heatmap-modal-body {
+    padding: 20px;
+}
+
+.heatmap-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: var(--theme-bg);
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+}
+
+.heatmap-legend-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.heatmap-legend-label {
+    font-size: 12px;
+    color: var(--theme-purple-mid);
+    font-weight: 600;
+}
+
+.heatmap-gradient-bar {
+    width: 150px;
+    height: 20px;
+    background: linear-gradient(to right,
+        #dc2626 0%,
+        #ef4444 20%,
+        #f97316 35%,
+        #facc15 50%,
+        #84cc16 65%,
+        #22c55e 80%,
+        #16a34a 100%);
+    border-radius: 4px;
+    border: 1px solid var(--theme-border);
+}
+
+.heatmap-info {
+    font-size: 12px;
+    color: var(--theme-purple-mid);
+    font-style: italic;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.heatmap-loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--theme-purple-mid);
+    font-size: 14px;
+}
+
+.heatmap-tile {
+    position: relative;
+    aspect-ratio: 1.5 / 1;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    overflow: hidden;
+}
+
+.heatmap-tile:hover {
+    transform: scale(1.05);
+    border-color: var(--theme-purple-light);
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.heatmap-tile-symbol {
+    font-size: 16px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.heatmap-tile-name {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.75);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.heatmap-tile-change {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.heatmap-tile-price {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Heatmap color classes based on % change */
+.heatmap-tile.extreme-loss {
+    background-color: #dc2626;
+}
+
+.heatmap-tile.major-loss {
+    background-color: #ef4444;
+}
+
+.heatmap-tile.moderate-loss {
+    background-color: #f97316;
+}
+
+.heatmap-tile.minor-loss {
+    background-color: #fb923c;
+}
+
+.heatmap-tile.neutral {
+    background-color: #64748b;
+}
+
+.heatmap-tile.minor-gain {
+    background-color: #a3e635;
+}
+
+.heatmap-tile.moderate-gain {
+    background-color: #84cc16;
+}
+
+.heatmap-tile.major-gain {
+    background-color: #22c55e;
+}
+
+.heatmap-tile.extreme-gain {
+    background-color: #16a34a;
 }
 
 /* Utility Classes */

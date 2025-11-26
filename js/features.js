@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.20 - Added Fear & Greed visual gauge with semi-circular meter
+ * v0.21 - Expanded to 50 tokens, added market heatmap visualization
  */
 
 // Feature Manager Class
@@ -21,6 +21,7 @@ class FeatureManager {
         this.initTipsPanel();
         this.initExportModal();
         this.initFearGreedModal();
+        this.initHeatmapModal();
         this.initMarketData();
         this.applySettings();
         this.startIndicatorUpdates();
@@ -1007,6 +1008,139 @@ class FeatureManager {
         needle.style.transform = `rotate(${angle}deg)`;
     }
 
+    // ================== HEATMAP MODAL ==================
+
+    initHeatmapModal() {
+        const heatmapBtn = document.getElementById('heatmap-btn');
+        const heatmapModal = document.getElementById('heatmap-modal');
+        const heatmapClose = document.getElementById('heatmap-modal-close');
+
+        heatmapBtn.addEventListener('click', () => {
+            heatmapModal.classList.remove('hidden');
+            // Fetch and render heatmap data when modal opens
+            this.fetchHeatmapData();
+        });
+
+        heatmapClose.addEventListener('click', () => {
+            heatmapModal.classList.add('hidden');
+        });
+
+        // Close on backdrop click
+        heatmapModal.addEventListener('click', (e) => {
+            if (e.target === heatmapModal) {
+                heatmapModal.classList.add('hidden');
+            }
+        });
+    }
+
+    async fetchHeatmapData() {
+        const heatmapGrid = document.getElementById('heatmap-grid');
+        heatmapGrid.innerHTML = '<div class="heatmap-loading">Loading market data...</div>';
+
+        try {
+            // Get all token symbols from CRYPTO_NAMES
+            const symbols = Object.keys(CRYPTO_NAMES);
+
+            // Build CoinGecko API IDs mapping (symbol to coingecko id)
+            const coinGeckoIds = {
+                'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+                'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+                'MATIC': 'matic-network', 'DOT': 'polkadot', 'TRX': 'tron', 'LINK': 'chainlink',
+                'TON': 'the-open-network', 'SHIB': 'shiba-inu', 'UNI': 'uniswap', 'LTC': 'litecoin',
+                'ATOM': 'cosmos', 'XLM': 'stellar', 'XMR': 'monero', 'BCH': 'bitcoin-cash',
+                'NEAR': 'near', 'APT': 'aptos', 'ARB': 'arbitrum', 'OP': 'optimism',
+                'FIL': 'filecoin', 'VET': 'vechain', 'ALGO': 'algorand', 'HBAR': 'hedera-hashgraph',
+                'ETC': 'ethereum-classic', 'INJ': 'injective-protocol', 'RUNE': 'thorchain',
+                'SAND': 'the-sandbox', 'MANA': 'decentraland', 'AXS': 'axie-infinity',
+                'GALA': 'gala', 'FTM': 'fantom', 'AAVE': 'aave', 'GRT': 'the-graph',
+                'IMX': 'immutable-x', 'MKR': 'maker', 'SNX': 'havven', 'LDO': 'lido-dao',
+                'EGLD': 'elrond-erd-2', 'EOS': 'eos', 'XTZ': 'tezos', 'THETA': 'theta-token',
+                'CRV': 'curve-dao-token', 'ZEC': 'zcash', 'DASH': 'dash', 'KAVA': 'kava'
+            };
+
+            // Build comma-separated list of CoinGecko IDs
+            const ids = symbols.map(s => coinGeckoIds[s]).filter(id => id).join(',');
+
+            // Fetch from CoinGecko
+            const response = await fetch(
+                `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch market data');
+
+            const data = await response.json();
+
+            // Build heatmap data array
+            const heatmapData = symbols
+                .map(symbol => {
+                    const id = coinGeckoIds[symbol];
+                    if (!id || !data[id]) return null;
+
+                    return {
+                        symbol: symbol,
+                        name: CRYPTO_NAMES[symbol],
+                        price: data[id].usd,
+                        change24h: data[id].usd_24h_change || 0
+                    };
+                })
+                .filter(item => item !== null)
+                .sort((a, b) => b.change24h - a.change24h); // Sort by % change descending
+
+            this.renderHeatmap(heatmapData);
+
+        } catch (error) {
+            console.error('Error fetching heatmap data:', error);
+            heatmapGrid.innerHTML = '<div class="heatmap-loading">Error loading market data. Please try again.</div>';
+        }
+    }
+
+    renderHeatmap(data) {
+        const heatmapGrid = document.getElementById('heatmap-grid');
+        heatmapGrid.innerHTML = '';
+
+        data.forEach(token => {
+            const tile = document.createElement('div');
+            tile.className = 'heatmap-tile ' + this.getHeatmapColorClass(token.change24h);
+
+            const changeSign = token.change24h >= 0 ? '+' : '';
+            const formattedPrice = token.price >= 1 ?
+                `$${token.price.toFixed(2)}` :
+                `$${token.price.toFixed(6)}`;
+
+            tile.innerHTML = `
+                <div>
+                    <div class="heatmap-tile-symbol">${token.symbol}</div>
+                    <div class="heatmap-tile-name">${token.name}</div>
+                </div>
+                <div>
+                    <div class="heatmap-tile-change">${changeSign}${token.change24h.toFixed(2)}%</div>
+                    <div class="heatmap-tile-price">${formattedPrice}</div>
+                </div>
+            `;
+
+            // Click handler to switch to this crypto
+            tile.addEventListener('click', () => {
+                document.getElementById('crypto').value = token.symbol;
+                document.getElementById('crypto').dispatchEvent(new Event('change'));
+                document.getElementById('heatmap-modal').classList.add('hidden');
+            });
+
+            heatmapGrid.appendChild(tile);
+        });
+    }
+
+    getHeatmapColorClass(change) {
+        if (change <= -10) return 'extreme-loss';
+        if (change <= -5) return 'major-loss';
+        if (change <= -2) return 'moderate-loss';
+        if (change < -0.5) return 'minor-loss';
+        if (change >= 10) return 'extreme-gain';
+        if (change >= 5) return 'major-gain';
+        if (change >= 2) return 'moderate-gain';
+        if (change > 0.5) return 'minor-gain';
+        return 'neutral';
+    }
+
     async exportChart() {
         if (typeof html2canvas === 'undefined') {
             alert('html2canvas library not loaded. Please refresh the page.');
@@ -1043,7 +1177,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.20</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.21</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';

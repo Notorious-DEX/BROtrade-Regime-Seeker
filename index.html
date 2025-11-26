@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BROtrade Regime Seeker v0.20</title>
+    <title>BROtrade Regime Seeker v0.21</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="version">v0.20</div>
+                <div class="version">v0.21</div>
                 <button id="settings-btn" class="settings-btn" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -219,6 +219,46 @@
                     <option value="AVAX">AVAX (Avalanche)</option>
                     <option value="MATIC">MATIC (Polygon)</option>
                     <option value="DOT">DOT (Polkadot)</option>
+                    <option value="TRX">TRX (Tron)</option>
+                    <option value="LINK">LINK (Chainlink)</option>
+                    <option value="TON">TON (Toncoin)</option>
+                    <option value="SHIB">SHIB (Shiba Inu)</option>
+                    <option value="UNI">UNI (Uniswap)</option>
+                    <option value="LTC">LTC (Litecoin)</option>
+                    <option value="ATOM">ATOM (Cosmos)</option>
+                    <option value="XLM">XLM (Stellar)</option>
+                    <option value="XMR">XMR (Monero)</option>
+                    <option value="BCH">BCH (Bitcoin Cash)</option>
+                    <option value="NEAR">NEAR (NEAR Protocol)</option>
+                    <option value="APT">APT (Aptos)</option>
+                    <option value="ARB">ARB (Arbitrum)</option>
+                    <option value="OP">OP (Optimism)</option>
+                    <option value="FIL">FIL (Filecoin)</option>
+                    <option value="VET">VET (VeChain)</option>
+                    <option value="ALGO">ALGO (Algorand)</option>
+                    <option value="HBAR">HBAR (Hedera)</option>
+                    <option value="ETC">ETC (Ethereum Classic)</option>
+                    <option value="INJ">INJ (Injective)</option>
+                    <option value="RUNE">RUNE (THORChain)</option>
+                    <option value="SAND">SAND (The Sandbox)</option>
+                    <option value="MANA">MANA (Decentraland)</option>
+                    <option value="AXS">AXS (Axie Infinity)</option>
+                    <option value="GALA">GALA (Gala)</option>
+                    <option value="FTM">FTM (Fantom)</option>
+                    <option value="AAVE">AAVE (Aave)</option>
+                    <option value="GRT">GRT (The Graph)</option>
+                    <option value="IMX">IMX (Immutable X)</option>
+                    <option value="MKR">MKR (Maker)</option>
+                    <option value="SNX">SNX (Synthetix)</option>
+                    <option value="LDO">LDO (Lido DAO)</option>
+                    <option value="EGLD">EGLD (MultiversX)</option>
+                    <option value="EOS">EOS (EOS)</option>
+                    <option value="XTZ">XTZ (Tezos)</option>
+                    <option value="THETA">THETA (Theta Network)</option>
+                    <option value="CRV">CRV (Curve DAO)</option>
+                    <option value="ZEC">ZEC (Zcash)</option>
+                    <option value="DASH">DASH (Dash)</option>
+                    <option value="KAVA">KAVA (Kava)</option>
                 </select>
             </div>
 
@@ -388,9 +428,14 @@
                 Controls: Mouse wheel to zoom | Left-click & drag to pan | Double-click to reset
             </div>
             <div class="status" id="status">Initializing...</div>
-            <button id="export-chart-btn" class="export-btn" title="Export Chart">
-                📷 Export
-            </button>
+            <div class="footer-buttons">
+                <button id="heatmap-btn" class="footer-btn" title="Market Heatmap">
+                    🔥 Heatmap
+                </button>
+                <button id="export-chart-btn" class="footer-btn" title="Export Chart">
+                    📷 Export
+                </button>
+            </div>
             <div class="copyright">
                 &copy; 2025 BROtrades&trade; All rights reserved.
             </div>
@@ -551,6 +596,31 @@
                                 <span>75-100: Extreme Greed</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Heatmap Modal -->
+        <div id="heatmap-modal" class="modal hidden">
+            <div class="modal-content heatmap-modal-content">
+                <div class="modal-header">
+                    <h3>🔥 Market Heatmap - 24h Performance</h3>
+                    <button class="modal-close" id="heatmap-modal-close">&times;</button>
+                </div>
+                <div class="modal-body heatmap-modal-body">
+                    <div class="heatmap-controls">
+                        <div class="heatmap-legend-bar">
+                            <span class="heatmap-legend-label">Losers</span>
+                            <div class="heatmap-gradient-bar"></div>
+                            <span class="heatmap-legend-label">Gainers</span>
+                        </div>
+                        <div class="heatmap-info">
+                            Click any token to view its chart
+                        </div>
+                    </div>
+                    <div id="heatmap-grid" class="heatmap-grid">
+                        <div class="heatmap-loading">Loading market data...</div>
                     </div>
                 </div>
             </div>
