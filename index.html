@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BROtrade Regime Seeker v0.16</title>
+    <title>BROtrade Regime Seeker v0.17</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -27,7 +27,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="version">v0.16</div>
+                <div class="version">v0.17</div>
                 <button id="settings-btn" class="settings-btn" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -354,35 +354,35 @@
             </div>
         </div>
 
-        <!-- Main Content Area with Panels -->
-        <div class="main-content">
-            <!-- Multi-Timeframe Panel (Left) -->
-            <div id="mtf-panel" class="mtf-panel collapsed">
-                <button class="mtf-toggle" id="mtf-toggle" title="Multi-Timeframe Analysis">
-                    <span class="mtf-toggle-text">MTF</span>
-                    <span class="mtf-toggle-arrow">◄</span>
-                </button>
-                <div class="mtf-content">
-                    <div class="mtf-header">
-                        <h3>MULTI-TIMEFRAME</h3>
-                        <button class="mtf-close" id="mtf-close">►</button>
+        <!-- Multi-Timeframe Panel (Far Left of Screen) -->
+        <div id="mtf-panel" class="mtf-panel collapsed">
+            <button class="mtf-toggle" id="mtf-toggle" title="Multi-Timeframe Analysis">
+                <span class="mtf-toggle-text">MTF</span>
+                <span class="mtf-toggle-arrow">◄</span>
+            </button>
+            <div class="mtf-content">
+                <div class="mtf-header">
+                    <h3>MULTI-TIMEFRAME</h3>
+                    <button class="mtf-close" id="mtf-close">►</button>
+                </div>
+                <div class="mtf-body">
+                    <div id="mtf-timeframes" class="mtf-timeframes">
+                        <!-- Will be populated by JavaScript -->
                     </div>
-                    <div class="mtf-body">
-                        <div id="mtf-timeframes" class="mtf-timeframes">
-                            <!-- Will be populated by JavaScript -->
+                    <div class="mtf-confluence">
+                        <h4>🎯 CONFLUENCE</h4>
+                        <div class="confluence-bar">
+                            <div id="confluence-fill" class="confluence-fill"></div>
                         </div>
-                        <div class="mtf-confluence">
-                            <h4>🎯 CONFLUENCE</h4>
-                            <div class="confluence-bar">
-                                <div id="confluence-fill" class="confluence-fill"></div>
-                            </div>
-                            <div id="confluence-text" class="confluence-text">--</div>
-                            <div id="confluence-tip" class="confluence-tip"></div>
-                        </div>
+                        <div id="confluence-text" class="confluence-text">--</div>
+                        <div id="confluence-tip" class="confluence-tip"></div>
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Main Content Area with Panels -->
+        <div class="main-content">
             <!-- Chart Container -->
             <div class="chart-section">
             <div class="chart-header">
