@@ -179,35 +179,19 @@ class FeatureManager {
 
         // Show/hide individual items based on settings
         if (fearGreedDisplay) {
-            if (this.settings.fearGreed) {
-                fearGreedDisplay.style.removeProperty('display');
-            } else {
-                fearGreedDisplay.style.display = 'none';
-            }
+            fearGreedDisplay.style.display = this.settings.fearGreed ? '' : 'none';
         }
         if (btcDomDisplay) {
-            if (this.settings.btcDom) {
-                btcDomDisplay.style.removeProperty('display');
-            } else {
-                btcDomDisplay.style.display = 'none';
-            }
+            btcDomDisplay.style.display = this.settings.btcDom ? '' : 'none';
         }
         if (adxDisplay) {
-            if (this.settings.showADX) {
-                adxDisplay.style.removeProperty('display');
-            } else {
-                adxDisplay.style.display = 'none';
-            }
+            adxDisplay.style.display = this.settings.showADX ? '' : 'none';
         }
 
         // Show container if any item is enabled
         if (marketInfo) {
             const anyEnabled = this.settings.fearGreed || this.settings.btcDom || this.settings.showADX;
-            if (anyEnabled) {
-                marketInfo.style.removeProperty('display');
-            } else {
-                marketInfo.style.display = 'none';
-            }
+            marketInfo.style.display = anyEnabled ? '' : 'none';
         }
 
         // Apply Confluence Badge
@@ -237,6 +221,13 @@ class FeatureManager {
     }
 
     updateConfluenceBadge() {
+        // Don't show badge if setting is disabled
+        if (!this.settings.confluenceBadge) {
+            const badge = document.getElementById('confluence-badge');
+            if (badge) badge.classList.add('hidden');
+            return;
+        }
+
         if (!this.mtfData || Object.keys(this.mtfData).length === 0) {
             return;
         }
@@ -255,14 +246,26 @@ class FeatureManager {
 
         if (uptrends >= Math.ceil(total * 0.6)) {
             badge.classList.remove('hidden');
-            badgeText.textContent = 'HIGH CONFLUENCE';
-            badgeCount.textContent = `${uptrends}/${total} BULLISH ↑`;
+            // Special text for 100% confluence
+            if (uptrends === total) {
+                badgeText.textContent = 'UPTREND CONFIRMED';
+                badgeCount.textContent = `${uptrends}/${total} ↑`;
+            } else {
+                badgeText.textContent = 'HIGH CONFLUENCE';
+                badgeCount.textContent = `${uptrends}/${total} BULLISH ↑`;
+            }
             badgeContent.classList.add('bullish');
             badgeContent.classList.remove('bearish');
         } else if (downtrends >= Math.ceil(total * 0.6)) {
             badge.classList.remove('hidden');
-            badgeText.textContent = 'HIGH CONFLUENCE';
-            badgeCount.textContent = `${downtrends}/${total} BEARISH ↓`;
+            // Special text for 100% confluence
+            if (downtrends === total) {
+                badgeText.textContent = 'DOWNTREND CONFIRMED';
+                badgeCount.textContent = `${downtrends}/${total} ↓`;
+            } else {
+                badgeText.textContent = 'HIGH CONFLUENCE';
+                badgeCount.textContent = `${downtrends}/${total} BEARISH ↓`;
+            }
             badgeContent.classList.add('bearish');
             badgeContent.classList.remove('bullish');
         } else {
@@ -540,11 +543,21 @@ class FeatureManager {
         if (uptrends > downtrends && uptrends > 0) {
             confluencePercent = (uptrends / total) * 100;
             confluenceType = uptrends >= Math.ceil(total * 0.6) ? 'bullish' : 'neutral';
-            confluenceText = `${uptrends}/${total} Bullish${uptrends >= Math.ceil(total * 0.6) ? ' Aligned' : ''}`;
+            // Special text for 100% confluence
+            if (uptrends === total) {
+                confluenceText = `${uptrends}/${total} Uptrend Confirmed`;
+            } else {
+                confluenceText = `${uptrends}/${total} Bullish${uptrends >= Math.ceil(total * 0.6) ? ' Aligned' : ''}`;
+            }
         } else if (downtrends > uptrends && downtrends > 0) {
             confluencePercent = (downtrends / total) * 100;
             confluenceType = downtrends >= Math.ceil(total * 0.6) ? 'bearish' : 'neutral';
-            confluenceText = `${downtrends}/${total} Bearish${downtrends >= Math.ceil(total * 0.6) ? ' Aligned' : ''}`;
+            // Special text for 100% confluence
+            if (downtrends === total) {
+                confluenceText = `${downtrends}/${total} Downtrend Confirmed`;
+            } else {
+                confluenceText = `${downtrends}/${total} Bearish${downtrends >= Math.ceil(total * 0.6) ? ' Aligned' : ''}`;
+            }
         }
 
         // Update MTF panel confluence
