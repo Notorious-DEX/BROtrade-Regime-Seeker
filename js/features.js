@@ -10,6 +10,7 @@ class FeatureManager {
         this.settings = this.loadSettings();
         this.mtfData = {};
         this.currentATR = null;
+        this.mtfPanelOpen = false; // Track MTF panel state
 
         this.init();
     }
@@ -186,9 +187,10 @@ class FeatureManager {
     }
 
     updateConfluenceBadge() {
-        // Don't show badge if setting is disabled
-        if (!this.settings.confluenceBadge) {
-            const badge = document.getElementById('confluence-badge');
+        const badge = document.getElementById('confluence-badge');
+
+        // Don't show badge if setting is disabled OR MTF panel is closed
+        if (!this.settings.confluenceBadge || !this.mtfPanelOpen) {
             if (badge) {
                 badge.classList.add('hidden');
             }
@@ -204,7 +206,6 @@ class FeatureManager {
         const downtrends = regimes.filter(r => r && r.includes('DOWNTREND')).length;
         const total = regimes.length;
 
-        const badge = document.getElementById('confluence-badge');
         const badgeContent = badge ? badge.querySelector('.confluence-badge-content') : null;
         const badgeText = document.getElementById('confluence-badge-text');
         const badgeCount = document.getElementById('confluence-badge-count');
@@ -370,18 +371,27 @@ class FeatureManager {
 
         mtfToggle.addEventListener('click', () => {
             mtfPanel.classList.remove('collapsed');
+            this.mtfPanelOpen = true;
             this.settings.mtfPanel = true;
             this.saveSettings();
             if (!this.mtfInitialized) {
                 this.startMTFUpdates();
                 this.mtfInitialized = true;
             }
+            // Update badge visibility when panel opens
+            this.updateConfluenceBadge();
         });
 
         mtfClose.addEventListener('click', () => {
             mtfPanel.classList.add('collapsed');
+            this.mtfPanelOpen = false;
             this.settings.mtfPanel = false;
             this.saveSettings();
+            // Hide badge when panel closes
+            const badge = document.getElementById('confluence-badge');
+            if (badge) {
+                badge.classList.add('hidden');
+            }
         });
     }
 
