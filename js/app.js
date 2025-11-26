@@ -37,7 +37,7 @@ const EXCHANGES = {
     }
 };
 
-// Crypto tokens info
+// Crypto tokens info - Top 50 (non-stablecoin, non-wrapped)
 const CRYPTO_NAMES = {
     'BTC': 'Bitcoin',
     'ETH': 'Ethereum',
@@ -48,7 +48,47 @@ const CRYPTO_NAMES = {
     'DOGE': 'Dogecoin',
     'AVAX': 'Avalanche',
     'MATIC': 'Polygon',
-    'DOT': 'Polkadot'
+    'DOT': 'Polkadot',
+    'TRX': 'Tron',
+    'LINK': 'Chainlink',
+    'TON': 'Toncoin',
+    'SHIB': 'Shiba Inu',
+    'UNI': 'Uniswap',
+    'LTC': 'Litecoin',
+    'ATOM': 'Cosmos',
+    'XLM': 'Stellar',
+    'XMR': 'Monero',
+    'BCH': 'Bitcoin Cash',
+    'NEAR': 'NEAR Protocol',
+    'APT': 'Aptos',
+    'ARB': 'Arbitrum',
+    'OP': 'Optimism',
+    'FIL': 'Filecoin',
+    'VET': 'VeChain',
+    'ALGO': 'Algorand',
+    'HBAR': 'Hedera',
+    'ETC': 'Ethereum Classic',
+    'INJ': 'Injective',
+    'RUNE': 'THORChain',
+    'SAND': 'The Sandbox',
+    'MANA': 'Decentraland',
+    'AXS': 'Axie Infinity',
+    'GALA': 'Gala',
+    'FTM': 'Fantom',
+    'AAVE': 'Aave',
+    'GRT': 'The Graph',
+    'IMX': 'Immutable X',
+    'MKR': 'Maker',
+    'SNX': 'Synthetix',
+    'LDO': 'Lido DAO',
+    'EGLD': 'MultiversX',
+    'EOS': 'EOS',
+    'XTZ': 'Tezos',
+    'THETA': 'Theta Network',
+    'CRV': 'Curve DAO',
+    'ZEC': 'Zcash',
+    'DASH': 'Dash',
+    'KAVA': 'Kava'
 };
 
 // Timeframe display names
