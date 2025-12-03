@@ -458,9 +458,9 @@ class RegimeSeekerApp {
             // Calculate bar width based on volume
             const barWidth = bar.normalizedVolume * chartWidth * 0.9; // 90% max width
 
-            // Create rectangle
+            // Create rectangle (flipped - bars extend from right to left)
             const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            rect.setAttribute('x', '0');
+            rect.setAttribute('x', chartWidth - barWidth); // Start from right edge
             rect.setAttribute('y', y - barHeight / 2);
             rect.setAttribute('width', barWidth);
             rect.setAttribute('height', barHeight);
