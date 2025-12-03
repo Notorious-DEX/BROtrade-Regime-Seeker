@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.22 - Footer layout improved, Kraken default, vertical tab text
+ * v0.23 - Added volume profile with toggle
  */
 
 // Feature Manager Class
@@ -46,6 +46,7 @@ class FeatureManager {
             regimeColors: true,
             showEMA: true,
             atrBands: false,
+            volumeProfile: true,
             sound: true,
             volumeFilter: false,
             volumeMultiplier: 2,
@@ -86,6 +87,7 @@ class FeatureManager {
             'setting-regime-colors': 'regimeColors',
             'setting-show-ema': 'showEMA',
             'setting-atr-bands': 'atrBands',
+            'setting-volume-profile': 'volumeProfile',
             'setting-sound': 'sound',
             'setting-volume-filter': 'volumeFilter',
             'setting-confluence-badge': 'confluenceBadge',
@@ -139,6 +141,14 @@ class FeatureManager {
             this.createATRBands();
         } else {
             this.removeATRBands();
+        }
+
+        // Volume Profile Toggle
+        if (this.app) {
+            this.app.volumeProfileEnabled = this.settings.volumeProfile;
+            if (this.app.data && this.app.data.length > 0) {
+                this.app.updateVolumeProfile();
+            }
         }
 
         // ===== INDICATORS SETTINGS =====
