@@ -117,6 +117,7 @@ class RegimeSeekerApp {
         this.updateInterval = 15; // seconds
         this.soundEnabled = true;
         this.regimeColorsEnabled = true;
+        this.volumeProfileEnabled = true;
 
         // Advanced Filters
         this.volumeFilterEnabled = false;
@@ -409,6 +410,12 @@ class RegimeSeekerApp {
      */
     updateVolumeProfile() {
         if (!this.data || this.data.length === 0 || !this.volumeProfileOverlay) {
+            return;
+        }
+
+        // Clear profile if disabled
+        if (!this.volumeProfileEnabled) {
+            this.volumeProfileOverlay.innerHTML = '';
             return;
         }
 
@@ -735,7 +742,7 @@ class RegimeSeekerApp {
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('BROtrade Regime Seeker v0.16');
+    console.log('BROtrade Regime Seeker v0.23');
     console.log('Initializing...');
 
     try {
