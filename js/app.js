@@ -128,12 +128,16 @@ class RegimeSeekerApp {
         this.chart = null;
         this.candlestickSeries = null;
         this.emaSeries = null;
+        this.volumeProfileSeries = null;
         this.data = [];
         this.isInitialLoad = true; // Track if this is the first data load
 
         // Indicator and sound
         this.indicator = new FilteredSignalsIndicator();
         this.soundGenerator = new SoundGenerator();
+
+        // Volume Profile
+        this.volumeProfile = new VolumeProfile({ valueAreaPercent: 68, numBins: 100 });
 
         // Initialize
         this.initUI();
@@ -380,6 +384,92 @@ class RegimeSeekerApp {
     }
 
     /**
+     * Create volume profile overlay
+     */
+    createVolumeProfileOverlay() {
+        const chartContainer = document.getElementById('chart');
+
+        // Create overlay container
+        const overlay = document.createElement('div');
+        overlay.id = 'volume-profile-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.right = '60px'; // Position just left of price axis
+        overlay.style.top = '0';
+        overlay.style.bottom = '30px'; // Account for time axis
+        overlay.style.width = '120px';
+        overlay.style.pointerEvents = 'none'; // Allow chart interactions
+        overlay.style.zIndex = '1';
+
+        chartContainer.appendChild(overlay);
+        this.volumeProfileOverlay = overlay;
+    }
+
+    /**
+     * Update volume profile display
+     */
+    updateVolumeProfile() {
+        if (!this.data || this.data.length === 0 || !this.volumeProfileOverlay) {
+            return;
+        }
+
+        // Calculate volume profile
+        const profile = this.volumeProfile.calculate(this.data);
+
+        if (!profile) {
+            return;
+        }
+
+        // Get chart dimensions and price scale
+        const priceScale = this.chart.priceScale('right');
+        const timeScale = this.chart.timeScale();
+
+        // Clear existing profile
+        this.volumeProfileOverlay.innerHTML = '';
+
+        // Get visible price range
+        const chartHeight = this.volumeProfileOverlay.clientHeight;
+        const chartWidth = this.volumeProfileOverlay.clientWidth;
+
+        // Create SVG for volume profile
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.overflow = 'visible';
+
+        // Draw histogram bars
+        for (const bar of profile.histogramData) {
+            // Convert price to pixel Y coordinate
+            const y = priceScale.priceToCoordinate(bar.price);
+
+            if (y === null) continue;
+
+            // Calculate bar width based on volume
+            const barWidth = bar.normalizedVolume * chartWidth * 0.9; // 90% max width
+            const barHeight = chartHeight / profile.histogramData.length;
+
+            // Create rectangle
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', '0');
+            rect.setAttribute('y', y - barHeight / 2);
+            rect.setAttribute('width', barWidth);
+            rect.setAttribute('height', Math.max(barHeight, 2));
+            rect.setAttribute('fill', bar.color);
+            rect.setAttribute('opacity', bar.isValueArea ? '0.7' : '0.4');
+
+            // Add glow effect for POC
+            if (bar.isPOC) {
+                rect.setAttribute('stroke', '#ffffff');
+                rect.setAttribute('stroke-width', '1');
+                rect.setAttribute('opacity', '0.9');
+            }
+
+            svg.appendChild(rect);
+        }
+
+        this.volumeProfileOverlay.appendChild(svg);
+    }
+
+    /**
      * Update chart with current data
      */
     updateChart() {
@@ -428,6 +518,9 @@ class RegimeSeekerApp {
         // Update series
         this.candlestickSeries.setData(candleData);
         this.emaSeries.setData(emaData);
+
+        // Update volume profile
+        this.updateVolumeProfile();
 
         // Only fit content on initial load or when user changes settings
         // This preserves zoom/pan position during auto-updates
@@ -497,6 +590,9 @@ class RegimeSeekerApp {
             title: 'Regime Trend',
         });
 
+        // Create volume profile overlay container
+        this.createVolumeProfileOverlay();
+
         // Auto-resize chart
         const resizeObserver = new ResizeObserver(entries => {
             if (entries.length === 0 || entries[0].target !== chartContainer) {
@@ -507,6 +603,13 @@ class RegimeSeekerApp {
         });
 
         resizeObserver.observe(chartContainer);
+
+        // Update volume profile on zoom/pan
+        this.chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+            if (this.data && this.data.length > 0) {
+                this.updateVolumeProfile();
+            }
+        });
 
         // Add double-click zoom on price scale (TradingView-style)
         chartContainer.addEventListener('dblclick', (event) => {
