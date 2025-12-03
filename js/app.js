@@ -598,7 +598,6 @@ class RegimeSeekerApp {
         this.emaSeries = this.chart.addLineSeries({
             color: THEME.ema,
             lineWidth: 2,
-            title: 'Regime Trend',
         });
 
         // Create volume profile overlay container
