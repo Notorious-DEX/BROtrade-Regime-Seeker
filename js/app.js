@@ -426,16 +426,19 @@ class RegimeSeekerApp {
             return;
         }
 
-        // Get chart dimensions and price scale
-        const priceScale = this.chart.priceScale('right');
-        const timeScale = this.chart.timeScale();
+        // Get chart dimensions
+        const chartHeight = this.volumeProfileOverlay.clientHeight;
+        const chartWidth = this.volumeProfileOverlay.clientWidth;
 
         // Clear existing profile
         this.volumeProfileOverlay.innerHTML = '';
 
-        // Get visible price range
-        const chartHeight = this.volumeProfileOverlay.clientHeight;
-        const chartWidth = this.volumeProfileOverlay.clientWidth;
+        // Get price range from data
+        const priceMin = profile.priceRange.min;
+        const priceMax = profile.priceRange.max;
+        const priceRange = priceMax - priceMin;
+
+        if (priceRange === 0) return;
 
         // Create SVG for volume profile
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -445,21 +448,22 @@ class RegimeSeekerApp {
 
         // Draw histogram bars
         for (const bar of profile.histogramData) {
-            // Convert price to pixel Y coordinate
-            const y = priceScale.priceToCoordinate(bar.price);
+            // Convert price to pixel Y coordinate (inverted because Y increases downward)
+            const priceNormalized = (bar.price - priceMin) / priceRange;
+            const y = chartHeight - (priceNormalized * chartHeight); // Invert Y axis
 
-            if (y === null) continue;
+            // Calculate bar height based on number of bins
+            const barHeight = Math.max(chartHeight / profile.histogramData.length, 2);
 
             // Calculate bar width based on volume
             const barWidth = bar.normalizedVolume * chartWidth * 0.9; // 90% max width
-            const barHeight = chartHeight / profile.histogramData.length;
 
             // Create rectangle
             const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rect.setAttribute('x', '0');
             rect.setAttribute('y', y - barHeight / 2);
             rect.setAttribute('width', barWidth);
-            rect.setAttribute('height', Math.max(barHeight, 2));
+            rect.setAttribute('height', barHeight);
             rect.setAttribute('fill', bar.color);
             rect.setAttribute('opacity', bar.isValueArea ? '0.7' : '0.4');
 
