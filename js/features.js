@@ -1,6 +1,6 @@
 /**
  * BROtrade Regime Seeker - Advanced Features Module
- * v0.23 - Added volume profile with toggle
+ * v0.24 - Added multi-token chart display (2-4 tokens simultaneously)
  */
 
 // Feature Manager Class
@@ -1242,7 +1242,7 @@ class FeatureManager {
 
                 let overlayHTML = '';
                 if (includeBranding) {
-                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.22</div>';
+                    overlayHTML += '<div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">🎯 BROtrade Regime Seeker v0.24</div>';
                 }
                 if (includeInfo) {
                     const symbol = this.app?.currentCrypto || 'BTC';

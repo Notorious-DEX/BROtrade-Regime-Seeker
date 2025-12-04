@@ -123,6 +123,11 @@ class RegimeSeekerApp {
         this.volumeFilterEnabled = false;
         this.volumeMultiplier = 2.0;
 
+        // Multi-Token Mode
+        this.multiTokenMode = false;
+        this.selectedTokens = [];
+        this.chartInstances = {}; // Map of token -> chart instance
+
         // State
         this.previousRegime = null;
         this.updateTimer = null;
@@ -142,6 +147,7 @@ class RegimeSeekerApp {
 
         // Initialize
         this.initUI();
+        this.initTokenSelector();
         this.fetchData();
         this.startAutoUpdate();
     }
@@ -204,6 +210,258 @@ class RegimeSeekerApp {
             volumeFilterEnabled: this.volumeFilterEnabled,
             volumeMultiplier: this.volumeMultiplier
         });
+    }
+
+    /**
+     * Initialize token selector for multi-token mode
+     */
+    initTokenSelector() {
+        const multiTokenCheckbox = document.getElementById('multi-token-mode');
+        const tokenSelector = document.getElementById('token-selector');
+        const singleChartContainer = document.getElementById('single-chart-container');
+        const multiChartGrid = document.getElementById('multi-chart-grid');
+
+        // Populate token selector with all available tokens
+        const tokens = Object.keys(CRYPTO_NAMES);
+        tokens.forEach(token => {
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.className = 'token-checkbox';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `token-${token}`;
+            checkbox.value = token;
+
+            const label = document.createElement('label');
+            label.htmlFor = `token-${token}`;
+            label.textContent = token;
+
+            checkboxDiv.appendChild(checkbox);
+            checkboxDiv.appendChild(label);
+
+            // Handle token selection
+            checkbox.addEventListener('change', () => {
+                this.handleTokenSelection(token, checkbox.checked);
+                if (checkbox.checked) {
+                    checkboxDiv.classList.add('selected');
+                } else {
+                    checkboxDiv.classList.remove('selected');
+                }
+            });
+
+            // Allow clicking on the div to toggle checkbox
+            checkboxDiv.addEventListener('click', (e) => {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                }
+            });
+
+            tokenSelector.appendChild(checkboxDiv);
+        });
+
+        // Handle multi-token mode toggle
+        multiTokenCheckbox.addEventListener('change', () => {
+            this.multiTokenMode = multiTokenCheckbox.checked;
+
+            if (this.multiTokenMode) {
+                tokenSelector.classList.add('active');
+                // If no tokens selected, select the current token by default
+                if (this.selectedTokens.length === 0) {
+                    this.selectedTokens = [this.currentCrypto];
+                    document.getElementById(`token-${this.currentCrypto}`).checked = true;
+                    document.querySelector(`#token-${this.currentCrypto}`).parentElement.classList.add('selected');
+                }
+                this.switchToMultiChartMode();
+            } else {
+                tokenSelector.classList.remove('active');
+                this.switchToSingleChartMode();
+            }
+        });
+    }
+
+    /**
+     * Handle token selection for multi-chart mode
+     */
+    handleTokenSelection(token, isSelected) {
+        if (isSelected) {
+            // Add token if not already selected and limit to 4
+            if (!this.selectedTokens.includes(token) && this.selectedTokens.length < 4) {
+                this.selectedTokens.push(token);
+            } else if (this.selectedTokens.length >= 4) {
+                // Uncheck if limit reached
+                document.getElementById(`token-${token}`).checked = false;
+                alert('Maximum 4 tokens can be displayed simultaneously.');
+                return;
+            }
+        } else {
+            // Remove token
+            this.selectedTokens = this.selectedTokens.filter(t => t !== token);
+
+            // Require at least 2 tokens in multi-token mode
+            if (this.multiTokenMode && this.selectedTokens.length < 2) {
+                document.getElementById(`token-${token}`).checked = true;
+                this.selectedTokens.push(token);
+                alert('At least 2 tokens must be selected in multi-token view.');
+                return;
+            }
+        }
+
+        // Refresh multi-chart display if in multi-token mode
+        if (this.multiTokenMode) {
+            this.updateMultiChartDisplay();
+        }
+    }
+
+    /**
+     * Switch to multi-chart mode
+     */
+    switchToMultiChartMode() {
+        const singleChartContainer = document.getElementById('single-chart-container');
+        const multiChartGrid = document.getElementById('multi-chart-grid');
+
+        // Hide single chart
+        singleChartContainer.classList.add('hidden');
+
+        // Show multi-chart grid
+        multiChartGrid.classList.remove('hidden');
+
+        // Stop single chart updates
+        if (this.updateTimer) {
+            clearInterval(this.updateTimer);
+        }
+
+        // Create multi-chart display
+        this.updateMultiChartDisplay();
+    }
+
+    /**
+     * Switch to single chart mode
+     */
+    switchToSingleChartMode() {
+        const singleChartContainer = document.getElementById('single-chart-container');
+        const multiChartGrid = document.getElementById('multi-chart-grid');
+
+        // Clean up chart instances
+        Object.values(this.chartInstances).forEach(instance => {
+            if (instance.chart) {
+                instance.chart.remove();
+            }
+        });
+        this.chartInstances = {};
+
+        // Show single chart
+        singleChartContainer.classList.remove('hidden');
+
+        // Hide multi-chart grid
+        multiChartGrid.classList.add('hidden');
+        multiChartGrid.innerHTML = '';
+
+        // Restart single chart
+        this.isInitialLoad = true;
+        this.fetchData();
+        this.startAutoUpdate();
+    }
+
+    /**
+     * Update multi-chart display
+     */
+    updateMultiChartDisplay() {
+        const multiChartGrid = document.getElementById('multi-chart-grid');
+
+        // Set grid class based on number of tokens
+        multiChartGrid.className = 'multi-chart-grid';
+        if (this.selectedTokens.length === 2) {
+            multiChartGrid.classList.add('grid-2');
+        } else if (this.selectedTokens.length === 3) {
+            multiChartGrid.classList.add('grid-3');
+        } else if (this.selectedTokens.length === 4) {
+            multiChartGrid.classList.add('grid-4');
+        }
+
+        // Clear existing charts
+        multiChartGrid.innerHTML = '';
+        Object.values(this.chartInstances).forEach(instance => {
+            if (instance.chart) {
+                instance.chart.remove();
+            }
+        });
+        this.chartInstances = {};
+
+        // Create chart for each selected token
+        this.selectedTokens.forEach(token => {
+            const chartItem = this.createMultiChartItem(token);
+            multiChartGrid.appendChild(chartItem);
+
+            // Create chart instance
+            const instance = new SingleChartInstance(
+                token,
+                this.currentTimeframe,
+                this.currentExchange,
+                this.utcOffset,
+                this
+            );
+            this.chartInstances[token] = instance;
+        });
+
+        // Start updates for all charts
+        this.startMultiChartUpdates();
+    }
+
+    /**
+     * Create a chart item container for multi-chart mode
+     */
+    createMultiChartItem(token) {
+        const item = document.createElement('div');
+        item.className = 'multi-chart-item';
+        item.id = `chart-item-${token}`;
+
+        const header = document.createElement('div');
+        header.className = 'multi-chart-header';
+
+        const title = document.createElement('div');
+        title.className = 'multi-chart-title';
+        title.id = `chart-title-${token}`;
+        title.textContent = `${CRYPTO_NAMES[token]} (${token})`;
+
+        const info = document.createElement('div');
+        info.className = 'multi-chart-info';
+        info.id = `chart-info-${token}`;
+        info.textContent = 'Loading...';
+
+        header.appendChild(title);
+        header.appendChild(info);
+
+        const canvas = document.createElement('div');
+        canvas.className = 'multi-chart-canvas';
+        canvas.id = `chart-canvas-${token}`;
+
+        item.appendChild(header);
+        item.appendChild(canvas);
+
+        return item;
+    }
+
+    /**
+     * Start updates for all multi-charts
+     */
+    startMultiChartUpdates() {
+        // Clear existing timer
+        if (this.updateTimer) {
+            clearInterval(this.updateTimer);
+        }
+
+        // Update all charts immediately
+        Object.values(this.chartInstances).forEach(instance => {
+            instance.fetchData();
+        });
+
+        // Start update timer
+        this.updateTimer = setInterval(() => {
+            Object.values(this.chartInstances).forEach(instance => {
+                instance.fetchData();
+            });
+        }, this.updateInterval * 1000);
     }
 
     /**
@@ -743,9 +1001,245 @@ class RegimeSeekerApp {
     }
 }
 
+/**
+ * Single Chart Instance Class for Multi-Token Mode
+ * Manages individual chart instances for each token
+ */
+class SingleChartInstance {
+    constructor(token, timeframe, exchange, utcOffset, parentApp) {
+        this.token = token;
+        this.timeframe = timeframe;
+        this.exchange = exchange;
+        this.utcOffset = utcOffset;
+        this.parentApp = parentApp;
+
+        this.chart = null;
+        this.candlestickSeries = null;
+        this.emaSeries = null;
+        this.data = [];
+        this.indicator = new FilteredSignalsIndicator({
+            volumeFilterEnabled: parentApp.volumeFilterEnabled,
+            volumeMultiplier: parentApp.volumeMultiplier
+        });
+
+        this.createChart();
+    }
+
+    async fetchData() {
+        try {
+            const exchange = EXCHANGES[this.exchange];
+            let data;
+
+            if (exchange.format === 'binance') {
+                data = await this.fetchBinanceData(exchange.url);
+            } else if (exchange.format === 'kraken') {
+                data = await this.fetchKrakenData(exchange.url);
+            }
+
+            if (!data || data.length === 0) {
+                throw new Error('No data received');
+            }
+
+            // Calculate indicators and regime states
+            this.data = this.indicator.calculateSignals(data);
+
+            // Update chart
+            this.updateChart();
+
+            // Update info display
+            const currentState = this.indicator.currentState;
+            const infoElement = document.getElementById(`chart-info-${this.token}`);
+            if (infoElement) {
+                infoElement.textContent = currentState;
+            }
+
+            // Update title color
+            const titleElement = document.getElementById(`chart-title-${this.token}`);
+            if (titleElement) {
+                titleElement.className = `multi-chart-title ${currentState}`;
+            }
+
+        } catch (error) {
+            console.error(`Error fetching data for ${this.token}:`, error);
+            const infoElement = document.getElementById(`chart-info-${this.token}`);
+            if (infoElement) {
+                infoElement.textContent = 'Error loading';
+            }
+        }
+    }
+
+    async fetchBinanceData(url) {
+        const params = new URLSearchParams({
+            symbol: `${this.token}USDT`,
+            interval: this.timeframe,
+            limit: 200
+        });
+
+        const response = await fetch(`${url}?${params}`);
+
+        if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('Rate limit exceeded');
+            } else if (response.status === 451) {
+                throw new Error('Not available in your region');
+            }
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const jsonData = await response.json();
+
+        return jsonData.map(candle => ({
+            time: candle[0] / 1000,
+            open: parseFloat(candle[1]),
+            high: parseFloat(candle[2]),
+            low: parseFloat(candle[3]),
+            close: parseFloat(candle[4]),
+            volume: parseFloat(candle[5])
+        }));
+    }
+
+    async fetchKrakenData(url) {
+        const intervalMap = {
+            '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+            '1h': 60, '4h': 240, '1d': 1440, '1w': 10080, '1M': 43200
+        };
+
+        const params = new URLSearchParams({
+            pair: `${this.token}USD`,
+            interval: intervalMap[this.timeframe] || 60
+        });
+
+        const response = await fetch(`${url}?${params}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const jsonData = await response.json();
+
+        if (jsonData.error && jsonData.error.length > 0) {
+            throw new Error(`Kraken API error: ${jsonData.error.join(', ')}`);
+        }
+
+        const pairKey = Object.keys(jsonData.result)[0];
+        const ohlcData = jsonData.result[pairKey];
+
+        return ohlcData.map(candle => ({
+            time: candle[0],
+            open: parseFloat(candle[1]),
+            high: parseFloat(candle[2]),
+            low: parseFloat(candle[3]),
+            close: parseFloat(candle[4]),
+            volume: parseFloat(candle[6])
+        }));
+    }
+
+    createChart() {
+        const chartContainer = document.getElementById(`chart-canvas-${this.token}`);
+
+        this.chart = LightweightCharts.createChart(chartContainer, {
+            layout: {
+                background: { color: THEME.secondaryBg },
+                textColor: THEME.purpleLight,
+            },
+            grid: {
+                vertLines: { color: THEME.border },
+                horzLines: { color: THEME.border },
+            },
+            rightPriceScale: {
+                borderColor: THEME.border,
+                mode: 0,
+                autoScale: true,
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1,
+                },
+            },
+            timeScale: {
+                borderColor: THEME.border,
+                timeVisible: true,
+                secondsVisible: false,
+                rightOffset: 12,
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+        });
+
+        this.candlestickSeries = this.chart.addCandlestickSeries({
+            upColor: THEME.bull,
+            downColor: THEME.bear,
+            borderUpColor: THEME.bull,
+            borderDownColor: THEME.bear,
+            wickUpColor: THEME.bull,
+            wickDownColor: THEME.bear,
+        });
+
+        this.emaSeries = this.chart.addLineSeries({
+            color: THEME.ema,
+            lineWidth: 2,
+            visible: this.parentApp.regimeColorsEnabled,
+        });
+
+        // Auto-resize chart
+        const resizeObserver = new ResizeObserver(entries => {
+            if (entries.length === 0 || entries[0].target !== chartContainer) {
+                return;
+            }
+            const newRect = entries[0].contentRect;
+            this.chart.applyOptions({ width: newRect.width, height: newRect.height });
+        });
+
+        resizeObserver.observe(chartContainer);
+    }
+
+    updateChart() {
+        if (!this.data || this.data.length === 0) {
+            return;
+        }
+
+        const offsetSeconds = this.utcOffset * 3600;
+
+        // Prepare candlestick data with regime colors
+        const candleData = this.data.map(candle => {
+            const color = this.parentApp.regimeColorsEnabled
+                ? FilteredSignalsIndicator.getRegimeColor(candle.state)
+                : (candle.close >= candle.open ? THEME.bull : THEME.bear);
+
+            return {
+                time: candle.time + offsetSeconds,
+                open: candle.open,
+                high: candle.high,
+                low: candle.low,
+                close: candle.close,
+                color: color,
+                borderColor: color,
+                wickColor: color
+            };
+        });
+
+        // Prepare EMA data
+        const emaData = [];
+        for (const candle of this.data) {
+            if (candle.ema !== null) {
+                emaData.push({
+                    time: candle.time + offsetSeconds,
+                    value: candle.ema
+                });
+            }
+        }
+
+        this.candlestickSeries.setData(candleData);
+        this.emaSeries.setData(emaData);
+
+        // Fit content on first load
+        this.chart.timeScale().fitContent();
+    }
+}
+
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('BROtrade Regime Seeker v0.23');
+    console.log('BROtrade Regime Seeker v0.24');
     console.log('Initializing...');
 
     try {
