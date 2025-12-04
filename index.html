@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BROtrade Regime Seeker v0.23</title>
+    <title>BROtrade Regime Seeker v0.24</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Lightweight Charts Library -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="version">v0.23</div>
+                <div class="version">v0.24</div>
                 <button id="settings-btn" class="settings-btn" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -331,6 +331,20 @@
             </div>
         </div>
 
+        <!-- Multi-Token Selector -->
+        <div class="multi-token-controls">
+            <div class="multi-token-header">
+                <label>
+                    <input type="checkbox" id="multi-token-mode">
+                    <span>Multi-Token View</span>
+                </label>
+                <span class="multi-token-hint">Select 2-4 tokens to display simultaneously</span>
+            </div>
+            <div class="token-selector" id="token-selector">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
         <!-- Confluence Panel (Far Left of Screen) -->
         <div id="mtf-panel" class="mtf-panel collapsed">
             <button class="mtf-toggle" id="mtf-toggle" title="Confluence Analysis">
@@ -362,46 +376,54 @@
         <div class="main-content">
             <!-- Chart Container -->
             <div class="chart-section">
-            <div class="chart-header">
-                <div class="chart-title" id="chart-title">Loading...</div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #8b5cf6;"></span>
-                        <span>Regime Trend</span>
+                <!-- Single Chart View (Default) -->
+                <div id="single-chart-container" class="single-chart-view">
+                    <div class="chart-header">
+                        <div class="chart-title" id="chart-title">Loading...</div>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #8b5cf6;"></span>
+                                <span>Regime Trend</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #22c55e;"></span>
+                                <span>Strong Up</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #065f46;"></span>
+                                <span>Weak Up</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #d4c5a9;"></span>
+                                <span>Ranging</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #7f1d1d;"></span>
+                                <span>Weak Down</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: #f87171;"></span>
+                                <span>Strong Down</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #22c55e;"></span>
-                        <span>Strong Up</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #065f46;"></span>
-                        <span>Weak Up</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #d4c5a9;"></span>
-                        <span>Ranging</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #7f1d1d;"></span>
-                        <span>Weak Down</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background-color: #f87171;"></span>
-                        <span>Strong Down</span>
+                    <div id="chart" class="chart">
+                        <!-- Confluence Badge (Floating) -->
+                        <div id="confluence-badge" class="confluence-badge hidden">
+                            <div class="confluence-badge-content">
+                                <span class="confluence-icon">⚡</span>
+                                <span id="confluence-badge-text">HIGH CONFLUENCE</span>
+                                <span id="confluence-badge-count">5/7 BULLISH ↑</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div id="chart" class="chart">
-                <!-- Confluence Badge (Floating) -->
-                <div id="confluence-badge" class="confluence-badge hidden">
-                    <div class="confluence-badge-content">
-                        <span class="confluence-icon">⚡</span>
-                        <span id="confluence-badge-text">HIGH CONFLUENCE</span>
-                        <span id="confluence-badge-count">5/7 BULLISH ↑</span>
-                    </div>
+
+                <!-- Multi Chart Grid (Hidden by default) -->
+                <div id="multi-chart-grid" class="multi-chart-grid hidden">
+                    <!-- Will be populated by JavaScript with chart instances -->
                 </div>
             </div>
-        </div>
         </div>
 
         <!-- Tips & Education Panel (Right Slide-out) -->
