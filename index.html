@@ -374,54 +374,56 @@
 
         <!-- Main Content Area with Panels -->
         <div class="main-content">
-            <!-- Chart Container -->
-            <div class="chart-section">
-                <!-- Single Chart View (Default) -->
-                <div id="single-chart-container" class="single-chart-view">
-                    <div class="chart-header">
-                        <div class="chart-title" id="chart-title">Loading...</div>
-                        <div class="legend">
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #8b5cf6;"></span>
-                                <span>Regime Trend</span>
+            <!-- Chart Container with Fullscreen Support -->
+            <div id="fullscreen-container" class="fullscreen-container">
+                <div class="chart-section">
+                    <!-- Single Chart View (Default) -->
+                    <div id="single-chart-container" class="single-chart-view">
+                        <div class="chart-header">
+                            <div class="chart-title" id="chart-title">Loading...</div>
+                            <div class="legend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #8b5cf6;"></span>
+                                    <span>Regime Trend</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #22c55e;"></span>
+                                    <span>Strong Up</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #065f46;"></span>
+                                    <span>Weak Up</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #d4c5a9;"></span>
+                                    <span>Ranging</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #7f1d1d;"></span>
+                                    <span>Weak Down</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #f87171;"></span>
+                                    <span>Strong Down</span>
+                                </div>
                             </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #22c55e;"></span>
-                                <span>Strong Up</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #065f46;"></span>
-                                <span>Weak Up</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #d4c5a9;"></span>
-                                <span>Ranging</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #7f1d1d;"></span>
-                                <span>Weak Down</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #f87171;"></span>
-                                <span>Strong Down</span>
+                        </div>
+                        <div id="chart" class="chart">
+                            <!-- Confluence Badge (Floating) -->
+                            <div id="confluence-badge" class="confluence-badge hidden">
+                                <div class="confluence-badge-content">
+                                    <span class="confluence-icon">⚡</span>
+                                    <span id="confluence-badge-text">HIGH CONFLUENCE</span>
+                                    <span id="confluence-badge-count">5/7 BULLISH ↑</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div id="chart" class="chart">
-                        <!-- Confluence Badge (Floating) -->
-                        <div id="confluence-badge" class="confluence-badge hidden">
-                            <div class="confluence-badge-content">
-                                <span class="confluence-icon">⚡</span>
-                                <span id="confluence-badge-text">HIGH CONFLUENCE</span>
-                                <span id="confluence-badge-count">5/7 BULLISH ↑</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Multi Chart Grid (Hidden by default) -->
-                <div id="multi-chart-grid" class="multi-chart-grid hidden">
-                    <!-- Will be populated by JavaScript with chart instances -->
+                    <!-- Multi Chart Grid (Hidden by default) -->
+                    <div id="multi-chart-grid" class="multi-chart-grid hidden">
+                        <!-- Will be populated by JavaScript with chart instances -->
+                    </div>
                 </div>
             </div>
         </div>

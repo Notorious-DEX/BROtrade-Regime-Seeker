@@ -127,6 +127,7 @@ class RegimeSeekerApp {
         this.multiTokenMode = false;
         this.selectedTokens = [];
         this.chartInstances = {}; // Map of token -> chart instance
+        this.isFullscreen = false;
 
         // State
         this.previousRegime = null;
@@ -148,6 +149,7 @@ class RegimeSeekerApp {
         // Initialize
         this.initUI();
         this.initTokenSelector();
+        this.initKeyboardShortcuts();
         this.fetchData();
         this.startAutoUpdate();
     }
@@ -276,6 +278,18 @@ class RegimeSeekerApp {
             } else {
                 tokenSelector.classList.remove('active');
                 this.switchToSingleChartMode();
+            }
+        });
+    }
+
+    /**
+     * Initialize keyboard shortcuts
+     */
+    initKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // ESC key to exit fullscreen
+            if (e.key === 'Escape' && this.isFullscreen) {
+                this.toggleFullscreen();
             }
         });
     }
@@ -419,6 +433,10 @@ class RegimeSeekerApp {
         const header = document.createElement('div');
         header.className = 'multi-chart-header';
 
+        const titleGroup = document.createElement('div');
+        titleGroup.style.display = 'flex';
+        titleGroup.style.flexDirection = 'column';
+
         const title = document.createElement('div');
         title.className = 'multi-chart-title';
         title.id = `chart-title-${token}`;
@@ -429,8 +447,22 @@ class RegimeSeekerApp {
         info.id = `chart-info-${token}`;
         info.textContent = 'Loading...';
 
-        header.appendChild(title);
-        header.appendChild(info);
+        titleGroup.appendChild(title);
+        titleGroup.appendChild(info);
+
+        // Add fullscreen button (only show on first chart)
+        if (this.selectedTokens[0] === token) {
+            const fullscreenBtn = document.createElement('button');
+            fullscreenBtn.className = 'fullscreen-btn';
+            fullscreenBtn.id = 'fullscreen-btn';
+            fullscreenBtn.title = 'Enter Fullscreen';
+            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+            header.appendChild(titleGroup);
+            header.appendChild(fullscreenBtn);
+        } else {
+            header.appendChild(titleGroup);
+        }
 
         const canvas = document.createElement('div');
         canvas.className = 'multi-chart-canvas';
@@ -440,6 +472,79 @@ class RegimeSeekerApp {
         item.appendChild(canvas);
 
         return item;
+    }
+
+    /**
+     * Toggle fullscreen mode for multi-chart view
+     */
+    toggleFullscreen() {
+        const fullscreenContainer = document.getElementById('fullscreen-container');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+        if (!this.isFullscreen) {
+            // Enter fullscreen
+            this.isFullscreen = true;
+            fullscreenContainer.classList.add('active');
+
+            // Hide other UI elements
+            document.querySelector('.header').style.display = 'none';
+            document.querySelector('.controls').style.display = 'none';
+            document.querySelector('.multi-token-controls').style.display = 'none';
+            document.querySelector('.footer').style.display = 'none';
+            document.getElementById('mtf-panel').style.display = 'none';
+            document.getElementById('tips-panel').style.display = 'none';
+
+            // Update button
+            if (fullscreenBtn) {
+                fullscreenBtn.title = 'Exit Fullscreen';
+                fullscreenBtn.innerHTML = '⛶';
+            }
+
+            // Add exit button
+            const exitBtn = document.createElement('button');
+            exitBtn.className = 'fullscreen-exit-btn';
+            exitBtn.id = 'fullscreen-exit-btn';
+            exitBtn.innerHTML = '✕ Exit Fullscreen';
+            exitBtn.addEventListener('click', () => this.toggleFullscreen());
+            fullscreenContainer.appendChild(exitBtn);
+
+        } else {
+            // Exit fullscreen
+            this.isFullscreen = false;
+            fullscreenContainer.classList.remove('active');
+
+            // Show UI elements
+            document.querySelector('.header').style.display = '';
+            document.querySelector('.controls').style.display = '';
+            document.querySelector('.multi-token-controls').style.display = '';
+            document.querySelector('.footer').style.display = '';
+            document.getElementById('mtf-panel').style.display = '';
+            document.getElementById('tips-panel').style.display = '';
+
+            // Update button
+            if (fullscreenBtn) {
+                fullscreenBtn.title = 'Enter Fullscreen';
+                fullscreenBtn.innerHTML = '⛶';
+            }
+
+            // Remove exit button
+            const exitBtn = document.getElementById('fullscreen-exit-btn');
+            if (exitBtn) {
+                exitBtn.remove();
+            }
+        }
+
+        // Resize charts to fit new container
+        setTimeout(() => {
+            Object.values(this.chartInstances).forEach(instance => {
+                if (instance.chart) {
+                    instance.chart.resize(
+                        instance.chart.options().width,
+                        instance.chart.options().height
+                    );
+                }
+            });
+        }, 100);
     }
 
     /**
